@@ -6,7 +6,7 @@ package check_test
 import (
 	"fmt"
 	"os"
-	//"regexp"
+
 	"runtime"
 	"testing"
 	"time"

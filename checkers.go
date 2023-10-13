@@ -23,14 +23,13 @@ type comment struct {
 //
 // For example:
 //
-//     c.Assert(v, Equals, 42, Commentf("Iteration #%d failed.", i))
+//	c.Assert(v, Equals, 42, Commentf("Iteration #%d failed.", i))
 //
 // Note that if the comment is constant, a better option is to
 // simply use a normal comment right above or next to the line, as
 // it will also get printed with any errors:
 //
-//     c.Assert(l, Equals, 8192) // Ensure buffer size is correct (bug #123)
-//
+//	c.Assert(l, Equals, 8192) // Ensure buffer size is correct (bug #123)
 func Commentf(format string, args ...interface{}) CommentInterface {
 	return &comment{format, args}
 }
@@ -74,8 +73,7 @@ func (info *CheckerInfo) Info() *CheckerInfo {
 //
 // For example:
 //
-//     c.Assert(a, Not(Equals), b)
-//
+//	c.Assert(a, Not(Equals), b)
 func Not(checker Checker) Checker {
 	return &notChecker{checker}
 }
@@ -111,8 +109,7 @@ type isNilChecker struct {
 //
 // For example:
 //
-//    c.Assert(err, IsNil)
-//
+//	c.Assert(err, IsNil)
 var IsNil Checker = &isNilChecker{
 	&CheckerInfo{Name: "IsNil", Params: []string{"value"}},
 }
@@ -144,11 +141,10 @@ type notNilChecker struct {
 //
 // For example:
 //
-//     c.Assert(iface, NotNil)
+//	c.Assert(iface, NotNil)
 //
 // This is an alias for Not(IsNil), made available since it's a
 // fairly common check.
-//
 var NotNil Checker = &notNilChecker{
 	&CheckerInfo{Name: "NotNil", Params: []string{"value"}},
 }
@@ -223,8 +219,7 @@ type equalsChecker struct {
 //
 // For example:
 //
-//     c.Assert(value, Equals, 42)
-//
+//	c.Assert(value, Equals, 42)
 var Equals Checker = &equalsChecker{
 	&CheckerInfo{Name: "Equals", Params: []string{"obtained", "expected"}},
 }
@@ -238,35 +233,6 @@ func (checker *equalsChecker) Check(params []interface{}, names []string) (resul
 	}()
 
 	result = params[0] == params[1]
-	if !result {
-		error = formatUnequal(params[0], params[1])
-	}
-	return
-}
-
-// -----------------------------------------------------------------------
-// DeepEquals checker.
-
-type deepEqualsChecker struct {
-	*CheckerInfo
-}
-
-// The DeepEquals checker verifies that the obtained value is deep-equal to
-// the expected value.  The check will work correctly even when facing
-// slices, interfaces, and values of different types (which always fail
-// the test).
-//
-// For example:
-//
-//     c.Assert(value, DeepEquals, 42)
-//     c.Assert(array, DeepEquals, []string{"hi", "there"})
-//
-var DeepEquals Checker = &deepEqualsChecker{
-	&CheckerInfo{Name: "DeepEquals", Params: []string{"obtained", "expected"}},
-}
-
-func (checker *deepEqualsChecker) Check(params []interface{}, names []string) (result bool, error string) {
-	result = reflect.DeepEqual(params[0], params[1])
 	if !result {
 		error = formatUnequal(params[0], params[1])
 	}
@@ -288,8 +254,7 @@ type hasLenChecker struct {
 //
 // For example:
 //
-//     c.Assert(list, HasLen, 5)
-//
+//	c.Assert(list, HasLen, 5)
 var HasLen Checker = &hasLenChecker{
 	&CheckerInfo{Name: "HasLen", Params: []string{"obtained", "n"}},
 }
@@ -320,8 +285,7 @@ type errorMatchesChecker struct {
 //
 // For example:
 //
-//     c.Assert(err, ErrorMatches, "perm.*denied")
-//
+//	c.Assert(err, ErrorMatches, "perm.*denied")
 var ErrorMatches Checker = errorMatchesChecker{
 	&CheckerInfo{Name: "ErrorMatches", Params: []string{"value", "regex"}},
 }
@@ -352,8 +316,7 @@ type matchesChecker struct {
 //
 // For example:
 //
-//     c.Assert(err, Matches, "perm.*denied")
-//
+//	c.Assert(err, Matches, "perm.*denied")
 var Matches Checker = &matchesChecker{
 	&CheckerInfo{Name: "Matches", Params: []string{"value", "regex"}},
 }
@@ -395,9 +358,7 @@ type panicsChecker struct {
 //
 // For example:
 //
-//     c.Assert(func() { f(1, 2) }, Panics, &SomeErrorType{"BOOM"}).
-//
-//
+//	c.Assert(func() { f(1, 2) }, Panics, &SomeErrorType{"BOOM"}).
 var Panics Checker = &panicsChecker{
 	&CheckerInfo{Name: "Panics", Params: []string{"function", "expected"}},
 }
@@ -430,9 +391,7 @@ type panicMatchesChecker struct {
 //
 // For example:
 //
-//     c.Assert(func() { f(1, 2) }, PanicMatches, `open.*: no such file or directory`).
-//
-//
+//	c.Assert(func() { f(1, 2) }, PanicMatches, `open.*: no such file or directory`).
 var PanicMatches Checker = &panicMatchesChecker{
 	&CheckerInfo{Name: "PanicMatches", Params: []string{"function", "expected"}},
 }
@@ -476,9 +435,8 @@ type fitsTypeChecker struct {
 //
 // For example:
 //
-//     c.Assert(value, FitsTypeOf, int64(0))
-//     c.Assert(value, FitsTypeOf, os.Error(nil))
-//
+//	c.Assert(value, FitsTypeOf, int64(0))
+//	c.Assert(value, FitsTypeOf, os.Error(nil))
 var FitsTypeOf Checker = &fitsTypeChecker{
 	&CheckerInfo{Name: "FitsTypeOf", Params: []string{"obtained", "sample"}},
 }
@@ -508,9 +466,8 @@ type implementsChecker struct {
 //
 // For example:
 //
-//     var e os.Error
-//     c.Assert(err, Implements, &e)
-//
+//	var e os.Error
+//	c.Assert(err, Implements, &e)
 var Implements Checker = &implementsChecker{
 	&CheckerInfo{Name: "Implements", Params: []string{"obtained", "ifaceptr"}},
 }

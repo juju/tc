@@ -126,30 +126,27 @@ func (s *CheckersS) TestDeepEquals(c *check.C) {
 
 	// The simplest.
 	testCheck(c, check.DeepEquals, true, "", 42, 42)
-	testCheck(c, check.DeepEquals, false, "", 42, 43)
+	testCheck(c, check.DeepEquals, false, "mismatch at top level: unequal; obtained 42; expected 43", 42, 43)
 
 	// Different native types.
-	testCheck(c, check.DeepEquals, false, "", int32(42), int64(42))
+	testCheck(c, check.DeepEquals, false, "mismatch at top level: type mismatch int32 vs int64; obtained 42; expected 42", int32(42), int64(42))
 
 	// With nil.
-	testCheck(c, check.DeepEquals, false, "", 42, nil)
+	testCheck(c, check.DeepEquals, false, "mismatch at top level: nil vs non-nil mismatch; obtained 42; expected <nil>", 42, nil)
 
 	// Slices
 	testCheck(c, check.DeepEquals, true, "", []byte{1, 2}, []byte{1, 2})
-	testCheck(c, check.DeepEquals, false, `Difference:
-...     [1]: 2 != 3`, []byte{1, 2}, []byte{1, 3})
+	testCheck(c, check.DeepEquals, false, "mismatch at [1]: unequal; obtained 0x2; expected 0x3", []byte{1, 2}, []byte{1, 3})
 
 	// Struct values
 	testCheck(c, check.DeepEquals, true, "", simpleStruct{1}, simpleStruct{1})
-	testCheck(c, check.DeepEquals, false, `Difference:
-...     i: 1 != 2`, simpleStruct{1}, simpleStruct{2})
+	testCheck(c, check.DeepEquals, false, "mismatch at .i: unequal; obtained 1; expected 2", simpleStruct{1}, simpleStruct{2})
 
 	// Struct pointers
 	testCheck(c, check.DeepEquals, true, "", &simpleStruct{1}, &simpleStruct{1})
 	s1 := &simpleStruct{1}
 	s2 := &simpleStruct{2}
-	testCheck(c, check.DeepEquals, false, `Difference:
-...     i: 1 != 2`, s1, s2)
+	testCheck(c, check.DeepEquals, false, "mismatch at (*).i: unequal; obtained 1; expected 2", s1, s2)
 }
 
 func (s *CheckersS) TestHasLen(c *check.C) {
