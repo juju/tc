@@ -3,7 +3,7 @@
 package check_test
 
 import (
-	. "gopkg.in/check.v1"
+	. "gopkg.in/check.v2"
 )
 
 var runnerS = Suite(&RunS{})

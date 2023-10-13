@@ -1,11 +1,13 @@
-//+build nowhere
+//go:build nowhere
+// +build nowhere
+
 // These tests verify the inner workings of the helper methods associated
 // with check.T.
 
 package check_test
 
 import (
-	"gopkg.in/check.v1"
+	"gopkg.in/check.v2"
 	"os"
 	"reflect"
 	"runtime"

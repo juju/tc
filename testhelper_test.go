@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	check "gopkg.in/check.v1"
+	check "gopkg.in/check.v2"
 )
 
 var (
-	helperRunFlag = flag.String("helper.run", "", "Run helper suite")
+	helperRunFlag   = flag.String("helper.run", "", "Run helper suite")
 	helperPanicFlag = flag.String("helper.panic", "", "")
 )
 
@@ -41,7 +41,7 @@ func TestHelperSuite(t *testing.T) {
 type helperResult []string
 
 var (
-	testRunLine = regexp.MustCompile(`^=== (?:RUN|CONT)\s+([0-9A-Za-z/]+)$`)
+	testRunLine    = regexp.MustCompile(`^=== (?:RUN|CONT)\s+([0-9A-Za-z/]+)$`)
 	testStatusLine = regexp.MustCompile(`^\s*--- ([A-Z]+): ([0-9A-Za-z/]+) \(\d+\.\d+s\)$`)
 )
 
@@ -51,7 +51,7 @@ func (result helperResult) Status(test string) string {
 		if match == nil {
 			continue
 		}
-		if match[2] == "TestHelperSuite/" + test {
+		if match[2] == "TestHelperSuite/"+test {
 			return match[1]
 		}
 	}
@@ -71,7 +71,7 @@ func (result helperResult) Logs(test string) string {
 			inTest = false
 		}
 		match := testRunLine.FindStringSubmatch(line)
-		if match != nil && match[1] == "TestHelperSuite/" + test {
+		if match != nil && match[1] == "TestHelperSuite/"+test {
 			inTest = true
 		}
 	}

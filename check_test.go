@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/check.v1"
+	"gopkg.in/check.v2"
 )
 
 // We count the number of suites run at least to get a vague hint that the

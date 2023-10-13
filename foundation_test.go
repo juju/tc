@@ -1,4 +1,6 @@
-//+build nowhere
+//go:build nowhere
+// +build nowhere
+
 // These tests check that the foundations of gocheck are working properly.
 // They already assume that fundamental failing is working already, though,
 // since this was tested in bootstrap_test.go. Even then, some care may
@@ -9,7 +11,7 @@ package check_test
 
 import (
 	"fmt"
-	"gopkg.in/check.v1"
+	"gopkg.in/check.v2"
 	"log"
 	"os"
 	"regexp"

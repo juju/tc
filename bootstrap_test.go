@@ -1,4 +1,5 @@
-//+build nowhere
+//go:build nowhere
+// +build nowhere
 
 // These initial tests are for bootstrapping.  They verify that we can
 // basically use the testing infrastructure itself to check if the test
@@ -16,7 +17,7 @@ package check_test
 
 import (
 	"fmt"
-	"gopkg.in/check.v1"
+	"gopkg.in/check.v2"
 	"strings"
 )
 

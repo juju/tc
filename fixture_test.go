@@ -1,10 +1,12 @@
-//+build nowhere
+//go:build nowhere
+// +build nowhere
+
 // Tests for the behavior of the test fixture system.
 
 package check_test
 
 import (
-	. "gopkg.in/check.v1"
+	. "gopkg.in/check.v2"
 )
 
 // -----------------------------------------------------------------------
