@@ -25,9 +25,7 @@ func Suite(suite interface{}) interface{} {
 // Public running interface.
 
 var (
-	oldListFlag = flag.Bool("gocheck.list", false, "List the names of all tests that will be run")
-
-	newListFlag = flag.Bool("check.list", false, "List the names of all tests that will be run")
+	newListFlag = flag.Bool("gc.list", false, "List the names of all tests that will be run")
 )
 
 // TestingT runs all test suites registered with the Suite function,
@@ -35,7 +33,7 @@ var (
 // the "testing" package.
 func TestingT(t *testing.T) {
 	t.Helper()
-	if *oldListFlag || *newListFlag {
+	if *newListFlag {
 		w := bufio.NewWriter(os.Stdout)
 		for _, name := range ListAll() {
 			fmt.Fprintln(w, name)
