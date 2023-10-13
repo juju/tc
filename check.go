@@ -2,8 +2,7 @@
 //
 // For details about the project, see:
 //
-//     http://labix.org/gocheck
-//
+//	http://labix.org/gocheck
 package check
 
 import (
@@ -76,11 +75,12 @@ func (m *methodType) Call(c *C) {
 	}()
 
 	c.Helper()
-	switch f := m.Interface().(type) {
-	case func(*C):
-		f(c)
-	case func(*testing.T):
-		f(c.T)
+
+	switch {
+	case m.CanConvert(reflect.TypeOf((func(*C))(nil))):
+		m.Convert(reflect.TypeOf((func(*C))(nil))).Interface().(func(*C))(c)
+	case m.CanConvert(reflect.TypeOf((func(*testing.T))(nil))):
+		m.Convert(reflect.TypeOf((func(*testing.T))(nil))).Interface().(func(*testing.T))(c.T)
 	default:
 		c.Fatalf("bad signature for method %s: %T", m.Info.Name, m.Interface())
 	}
