@@ -77,10 +77,10 @@ func (m *methodType) Call(c *C) {
 	c.Helper()
 
 	switch {
-	case m.CanConvert(reflect.TypeOf((func(*C))(nil))):
-		m.Convert(reflect.TypeOf((func(*C))(nil))).Interface().(func(*C))(c)
-	case m.CanConvert(reflect.TypeOf((func(*testing.T))(nil))):
-		m.Convert(reflect.TypeOf((func(*testing.T))(nil))).Interface().(func(*testing.T))(c.T)
+	case m.Info.Type.In(1) == reflect.TypeOf((*C)(nil)) && m.Info.Type.NumIn() == 2:
+		m.Value.Call([]reflect.Value{reflect.ValueOf(c)})
+	case m.Info.Type.In(1) == reflect.TypeOf((*testing.T)(nil)) && m.Info.Type.NumIn() == 2:
+		m.Value.Call([]reflect.Value{reflect.ValueOf(c.T)})
 	default:
 		c.Fatalf("bad signature for method %s: %T", m.Info.Name, m.Interface())
 	}
