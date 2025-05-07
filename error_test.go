@@ -6,10 +6,16 @@ package tc_test
 import (
 	"fmt"
 
-	"github.com/juju/errors"
-
 	. "github.com/juju/tc"
 )
+
+// a ConstError is a prototype for a certain type of error
+type ConstError string
+
+// ConstError implements error
+func (e ConstError) Error() string {
+	return string(e)
+}
 
 type ErrorSuite struct{}
 
@@ -37,29 +43,29 @@ var errorIsTests = []struct {
 	target: fmt.Errorf("foo"),
 	result: false,
 }, {
-	arg:    errors.ConstError("bar"),
-	target: errors.ConstError("foo"),
+	arg:    ConstError("bar"),
+	target: ConstError("foo"),
 	result: false,
 }, {
-	arg:    errors.ConstError("foo"),
-	target: errors.ConstError("foo"),
+	arg:    ConstError("foo"),
+	target: ConstError("foo"),
 	result: true,
 }, {
-	arg:    errors.Trace(errors.ConstError("foo")),
-	target: errors.ConstError("foo"),
+	arg:    fmt.Errorf("%w", ConstError("foo")),
+	target: ConstError("foo"),
 	result: true,
 }, {
-	arg:    errors.ConstError("foo"),
+	arg:    ConstError("foo"),
 	target: "blah",
 	msg:    "wrong error target type, got: string",
 }, {
 	arg:    "blah",
-	target: errors.ConstError("foo"),
-	msg:    "wrong argument type string for errors.ConstError",
+	target: ConstError("foo"),
+	msg:    "wrong argument type string for tc_test.ConstError",
 }, {
 	arg:    (*error)(nil),
-	target: errors.ConstError("foo"),
-	msg:    "wrong argument type *error for errors.ConstError",
+	target: ConstError("foo"),
+	msg:    "wrong argument type *error for tc_test.ConstError",
 }}
 
 func (s *ErrorSuite) TestErrorIs(c *C) {
