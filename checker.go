@@ -1,7 +1,7 @@
 // Copyright 2012, 2013 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func (checker *timeBetweenChecker) Info() *CheckerInfo {
 	return &info
 }
 
-func (checker *timeBetweenChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *timeBetweenChecker) Check(params []any, names []string) (result bool, error string) {
 	when, ok := params[0].(time.Time)
 	if !ok {
 		return false, "obtained value type must be time.Time"
@@ -53,7 +53,7 @@ var DurationLessThan Checker = &durationLessThanChecker{
 	&CheckerInfo{Name: "DurationLessThan", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *durationLessThanChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *durationLessThanChecker) Check(params []any, names []string) (result bool, error string) {
 	obtained, ok := params[0].(time.Duration)
 	if !ok {
 		return false, "obtained value type must be time.Duration"
@@ -67,7 +67,7 @@ func (checker *durationLessThanChecker) Check(params []interface{}, names []stri
 
 // HasPrefix checker for checking strings
 
-func stringOrStringer(value interface{}) (string, bool) {
+func stringOrStringer(value any) (string, bool) {
 	result, isString := value.(string)
 	if !isString {
 		if stringer, isStringer := value.(fmt.Stringer); isStringer {
@@ -85,7 +85,7 @@ var HasPrefix Checker = &hasPrefixChecker{
 	&CheckerInfo{Name: "HasPrefix", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *hasPrefixChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *hasPrefixChecker) Check(params []any, names []string) (result bool, error string) {
 	expected, ok := params[1].(string)
 	if !ok {
 		return false, "expected must be a string"
@@ -107,7 +107,7 @@ var HasSuffix Checker = &hasSuffixChecker{
 	&CheckerInfo{Name: "HasSuffix", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *hasSuffixChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *hasSuffixChecker) Check(params []any, names []string) (result bool, error string) {
 	expected, ok := params[1].(string)
 	if !ok {
 		return false, "expected must be a string"
@@ -129,7 +129,7 @@ var Contains Checker = &containsChecker{
 	&CheckerInfo{Name: "Contains", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *containsChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *containsChecker) Check(params []any, names []string) (result bool, error string) {
 	expected, ok := params[1].(string)
 	if !ok {
 		return false, "expected must be a string"
@@ -155,7 +155,7 @@ var SameContents Checker = &sameContents{
 	&CheckerInfo{Name: "SameContents", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *sameContents) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *sameContents) Check(params []any, names []string) (result bool, error string) {
 	if len(params) != 2 {
 		return false, "SameContents expects two slice arguments"
 	}
@@ -233,7 +233,7 @@ type ErrorStacker interface {
 	StackTrace() []string
 }
 
-func (checker *errorIsNilChecker) Check(params []interface{}, names []string) (bool, string) {
+func (checker *errorIsNilChecker) Check(params []any, names []string) (bool, string) {
 	result, message := errorIsNil(params[0])
 	if !result {
 		if stacker, ok := params[0].(ErrorStacker); ok && message == "" {
@@ -246,7 +246,7 @@ func (checker *errorIsNilChecker) Check(params []interface{}, names []string) (b
 	return result, message
 }
 
-func errorIsNil(obtained interface{}) (result bool, message string) {
+func errorIsNil(obtained any) (result bool, message string) {
 	if obtained == nil {
 		return true, ""
 	}

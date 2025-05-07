@@ -1,10 +1,10 @@
 // Copyright 2014 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check_test
+package tc_test
 
 import (
-	. "gopkg.in/check.v2"
+	. "github.com/juju/tc"
 )
 
 type Inner struct {
@@ -75,13 +75,13 @@ func (s *CheckerSuite) TestJSONEquals(c *C) {
 	}
 	for i, test := range tests {
 		c.Logf("test #%d) %s", i, test.descr)
-		result, msg := JSONEquals.Check([]interface{}{test.obtained, test.expected}, nil)
+		result, msg := JSONEquals.Check([]any{test.obtained, test.expected}, nil)
 		c.Check(result, Equals, test.result)
 		c.Check(msg, Matches, test.msg)
 	}
 
 	// Test non-string input.
-	result, msg := JSONEquals.Check([]interface{}{true, true}, nil)
+	result, msg := JSONEquals.Check([]any{true, true}, nil)
 	c.Check(result, Equals, false)
 	c.Check(msg, Matches, "expected string, got bool")
 }
@@ -143,13 +143,13 @@ func (s *CheckerSuite) TestYAMLEquals(c *C) {
 	}
 	for i, test := range tests {
 		c.Logf("test #%d) %s", i, test.descr)
-		result, msg := YAMLEquals.Check([]interface{}{test.obtained, test.expected}, nil)
+		result, msg := YAMLEquals.Check([]any{test.obtained, test.expected}, nil)
 		c.Check(result, Equals, test.result)
 		c.Check(msg, Matches, test.msg)
 	}
 
 	// Test non-string input.
-	result, msg := YAMLEquals.Check([]interface{}{true, true}, nil)
+	result, msg := YAMLEquals.Check([]any{true, true}, nil)
 	c.Check(result, Equals, false)
 	c.Check(msg, Matches, "expected string, got bool")
 }

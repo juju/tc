@@ -1,4 +1,4 @@
-package check
+package tc
 
 func PrintLine(filename string, line int) (string, error) {
 	return printLine(filename, line)

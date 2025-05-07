@@ -1,7 +1,7 @@
 // Copyright 2012-2014 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"encoding/json"
@@ -12,15 +12,15 @@ import (
 
 type codecEqualChecker struct {
 	name      string
-	marshal   func(interface{}) ([]byte, error)
-	unmarshal func([]byte, interface{}) error
+	marshal   func(any) ([]byte, error)
+	unmarshal func([]byte, any) error
 }
 
 // JSONEquals defines a checker that checks whether a byte slice, when
 // unmarshaled as JSON, is equal to the given value.
 // Rather than unmarshaling into something of the expected
 // body type, we reform the expected body in JSON and
-// back to interface{}, so we can check the whole content.
+// back to any, so we can check the whole content.
 // Otherwise we lose information when unmarshaling.
 var JSONEquals = &codecEqualChecker{
 	name:      "JSONEquals",
@@ -32,7 +32,7 @@ var JSONEquals = &codecEqualChecker{
 // unmarshaled as YAML, is equal to the given value.
 // Rather than unmarshaling into something of the expected
 // body type, we reform the expected body in YAML and
-// back to interface{}, so we can check the whole content.
+// back to any, so we can check the whole content.
 // Otherwise we lose information when unmarshaling.
 var YAMLEquals = &codecEqualChecker{
 	name:      "YAMLEquals",
@@ -47,7 +47,7 @@ func (checker *codecEqualChecker) Info() *CheckerInfo {
 	}
 }
 
-func (checker *codecEqualChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *codecEqualChecker) Check(params []any, names []string) (result bool, error string) {
 	gotContent, ok := params[0].(string)
 	if !ok {
 		return false, fmt.Sprintf("expected string, got %T", params[0])
@@ -57,12 +57,12 @@ func (checker *codecEqualChecker) Check(params []interface{}, names []string) (r
 	if err != nil {
 		return false, fmt.Sprintf("cannot marshal expected contents: %v", err)
 	}
-	var expectContentVal interface{}
+	var expectContentVal any
 	if err := checker.unmarshal(expectContentBytes, &expectContentVal); err != nil {
 		return false, fmt.Sprintf("cannot unmarshal expected contents: %v", err)
 	}
 
-	var gotContentVal interface{}
+	var gotContentVal any
 	if err := checker.unmarshal([]byte(gotContent), &gotContentVal); err != nil {
 		return false, fmt.Sprintf("cannot unmarshal obtained contents: %v; %q", err, gotContent)
 	}

@@ -1,9 +1,36 @@
-// Package check is a rich testing extension for Go's testing package.
+// Gocheck - A rich testing framework for Go
+//
+// Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// check is a rich testing extension for Go's testing package.
 //
 // For details about the project, see:
 //
 //	http://labix.org/gocheck
-package check
+
+package tc
 
 import (
 	"fmt"
@@ -154,7 +181,7 @@ func niceFuncName(pc uintptr) string {
 	return "<unknown function>"
 }
 
-func suiteName(suite interface{}) string {
+func suiteName(suite any) string {
 	suiteType := reflect.TypeOf(suite)
 	if suiteType.Kind() == reflect.Ptr {
 		return suiteType.Elem().Name()
@@ -166,7 +193,7 @@ func suiteName(suite interface{}) string {
 // The underlying suite runner.
 
 type suiteRunner struct {
-	suite                     interface{}
+	suite                     any
 	setUpSuite, tearDownSuite *methodType
 	setUpTest, tearDownTest   *methodType
 	tests                     []*methodType
@@ -175,7 +202,7 @@ type suiteRunner struct {
 }
 
 // Create a new suiteRunner able to run all methods in the given suite.
-func newSuiteRunner(suite interface{}) *suiteRunner {
+func newSuiteRunner(suite any) *suiteRunner {
 	suiteType := reflect.TypeOf(suite)
 	suiteNumMethods := suiteType.NumMethod()
 	suiteValue := reflect.ValueOf(suite)

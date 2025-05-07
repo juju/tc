@@ -1,11 +1,14 @@
-package check_test
+// Copyright 2023 Canonical Ltd.
+// Licensed under the LGPLv3, see LICENCE file for details.
+
+package tc_test
 
 import (
 	"fmt"
 
 	"github.com/juju/errors"
 
-	. "gopkg.in/check.v2"
+	. "github.com/juju/tc"
 )
 
 type ErrorSuite struct{}
@@ -13,8 +16,8 @@ type ErrorSuite struct{}
 var _ = Suite(&ErrorSuite{})
 
 var errorIsTests = []struct {
-	arg    interface{}
-	target interface{}
+	arg    any
+	target any
 	result bool
 	msg    string
 }{{
@@ -62,7 +65,7 @@ var errorIsTests = []struct {
 func (s *ErrorSuite) TestErrorIs(c *C) {
 	for i, test := range errorIsTests {
 		c.Logf("test %d. %T %T", i, test.arg, test.target)
-		result, msg := ErrorIs.Check([]interface{}{test.arg, test.target}, nil)
+		result, msg := ErrorIs.Check([]any{test.arg, test.target}, nil)
 		c.Check(result, Equals, test.result)
 		c.Check(msg, Equals, test.msg)
 	}

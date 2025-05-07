@@ -1,7 +1,7 @@
 // Copyright 2022 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ var Almost Checker = &timeCompareChecker{
 	},
 }
 
-func (checker *timeCompareChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *timeCompareChecker) Check(params []any, names []string) (result bool, error string) {
 	if len(params) != 2 {
 		return false, fmt.Sprintf("expected 2 parameters, received %d", len(params))
 	}

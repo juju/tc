@@ -2,7 +2,7 @@
 // Copyright 2014 Cloudbase Solutions SRL
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ var IsNonEmptyFile Checker = &isNonEmptyFileChecker{
 	&CheckerInfo{Name: "IsNonEmptyFile", Params: []string{"obtained"}},
 }
 
-func (checker *isNonEmptyFileChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *isNonEmptyFileChecker) Check(params []any, names []string) (result bool, error string) {
 	filename, isString := stringOrStringer(params[0])
 	if isString {
 		fileInfo, err := os.Stat(filename)
@@ -53,7 +53,7 @@ var IsDirectory Checker = &isDirectoryChecker{
 	&CheckerInfo{Name: "IsDirectory", Params: []string{"obtained"}},
 }
 
-func (checker *isDirectoryChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *isDirectoryChecker) Check(params []any, names []string) (result bool, error string) {
 	path, isString := stringOrStringer(params[0])
 	if isString {
 		fileInfo, err := os.Stat(path)
@@ -83,7 +83,7 @@ var IsSymlink Checker = &isSymlinkChecker{
 	&CheckerInfo{Name: "IsSymlink", Params: []string{"obtained"}},
 }
 
-func (checker *isSymlinkChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *isSymlinkChecker) Check(params []any, names []string) (result bool, error string) {
 	path, isString := stringOrStringer(params[0])
 	if isString {
 		fileInfo, err := os.Lstat(path)
@@ -113,7 +113,7 @@ var DoesNotExist Checker = &doesNotExistChecker{
 	&CheckerInfo{Name: "DoesNotExist", Params: []string{"obtained"}},
 }
 
-func (checker *doesNotExistChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *doesNotExistChecker) Check(params []any, names []string) (result bool, error string) {
 	path, isString := stringOrStringer(params[0])
 	if isString {
 		_, err := os.Stat(path)
@@ -139,7 +139,7 @@ var SymlinkDoesNotExist Checker = &symlinkDoesNotExistChecker{
 	&CheckerInfo{Name: "SymlinkDoesNotExist", Params: []string{"obtained"}},
 }
 
-func (checker *symlinkDoesNotExistChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *symlinkDoesNotExistChecker) Check(params []any, names []string) (result bool, error string) {
 	path, isString := stringOrStringer(params[0])
 	if isString {
 		_, err := os.Lstat(path)
@@ -166,7 +166,7 @@ var SamePath Checker = &samePathChecker{
 	&CheckerInfo{Name: "SamePath", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *samePathChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *samePathChecker) Check(params []any, names []string) (result bool, error string) {
 	// Check for panics
 	defer func() {
 		if panicked := recover(); panicked != nil {

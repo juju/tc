@@ -1,7 +1,33 @@
+// Gocheck - A rich testing framework for Go
+//
+// Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 // This file contains just a few generic helpers which are used by the
 // other test files.
 
-package check_test
+package tc_test
 
 import (
 	"fmt"
@@ -11,7 +37,7 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/check.v2"
+	"github.com/juju/tc"
 )
 
 // We count the number of suites run at least to get a vague hint that the
@@ -22,7 +48,7 @@ const suitesRunExpected = 4
 var suitesRun int = 0
 
 func Test(t *testing.T) {
-	check.TestingT(t)
+	tc.TestingT(t)
 	if suitesRun != suitesRunExpected {
 		critical(fmt.Sprintf("Expected %d suites to run rather than %d",
 			suitesRunExpected, suitesRun))
@@ -64,8 +90,8 @@ func (s *String) Write(p []byte) (n int, err error) {
 
 // Trivial wrapper to test errors happening on a different file
 // than the test itself.
-func checkEqualWrapper(c *check.C, obtained, expected interface{}) (result bool, line int) {
-	return c.Check(obtained, check.Equals, expected), getMyLine()
+func checkEqualWrapper(c *tc.C, obtained, expected any) (result bool, line int) {
+	return c.Check(obtained, tc.Equals, expected), getMyLine()
 }
 
 // -----------------------------------------------------------------------
@@ -75,7 +101,7 @@ type FailHelper struct {
 	testLine int
 }
 
-func (s *FailHelper) TestLogAndFail(c *check.C) {
+func (s *FailHelper) TestLogAndFail(c *tc.C) {
 	s.testLine = getMyLine() - 1
 	c.Log("Expected failure!")
 	c.Fail()
@@ -86,7 +112,7 @@ func (s *FailHelper) TestLogAndFail(c *check.C) {
 
 type SuccessHelper struct{}
 
-func (s *SuccessHelper) TestLogAndSucceed(c *check.C) {
+func (s *SuccessHelper) TestLogAndSucceed(c *tc.C) {
 	c.Log("Expected success!")
 }
 
@@ -103,7 +129,7 @@ type FixtureHelper struct {
 	bytes   int64
 }
 
-func (s *FixtureHelper) trace(name string, c *check.C) {
+func (s *FixtureHelper) trace(name string, c *tc.C) {
 	s.calls = append(s.calls, name)
 	if name == s.panicOn {
 		panic(name)
@@ -116,27 +142,27 @@ func (s *FixtureHelper) trace(name string, c *check.C) {
 	}
 }
 
-func (s *FixtureHelper) SetUpSuite(c *check.C) {
+func (s *FixtureHelper) SetUpSuite(c *tc.C) {
 	s.trace("SetUpSuite", c)
 }
 
-func (s *FixtureHelper) TearDownSuite(c *check.C) {
+func (s *FixtureHelper) TearDownSuite(c *tc.C) {
 	s.trace("TearDownSuite", c)
 }
 
-func (s *FixtureHelper) SetUpTest(c *check.C) {
+func (s *FixtureHelper) SetUpTest(c *tc.C) {
 	s.trace("SetUpTest", c)
 }
 
-func (s *FixtureHelper) TearDownTest(c *check.C) {
+func (s *FixtureHelper) TearDownTest(c *tc.C) {
 	s.trace("TearDownTest", c)
 }
 
-func (s *FixtureHelper) Test1(c *check.C) {
+func (s *FixtureHelper) Test1(c *tc.C) {
 	s.trace("Test1", c)
 }
 
-func (s *FixtureHelper) Test2(c *check.C) {
+func (s *FixtureHelper) Test2(c *tc.C) {
 	s.trace("Test2", c)
 }
 
@@ -147,37 +173,7 @@ func (s *FixtureHelper) Test2(c *check.C) {
 
 type expectedState struct {
 	name   string
-	result interface{}
+	result any
 	failed bool
 	log    string
 }
-
-// Verify the state of the test.  Note that since this also verifies if
-// the test is supposed to be in a failed state, no other checks should
-// be done in addition to what is being tested.
-/*
-func checkState(c *check.C, result interface{}, expected *expectedState) {
-	failed := c.Failed()
-	c.Succeed()
-	log := c.GetTestLog()
-	matched, matchError := regexp.MatchString("^"+expected.log+"$", log)
-	if matchError != nil {
-		c.Errorf("Error in matching expression used in testing %s: %v",
-			expected.name, matchError)
-	} else if !matched {
-		c.Errorf("%s logged:\n----------\n%s----------\n\nExpected:\n----------\n%s\n----------",
-			expected.name, log, expected.log)
-	}
-	if result != expected.result {
-		c.Errorf("%s returned %#v rather than %#v",
-			expected.name, result, expected.result)
-	}
-	if failed != expected.failed {
-		if failed {
-			c.Errorf("%s has failed when it shouldn't", expected.name)
-		} else {
-			c.Errorf("%s has not failed when it should", expected.name)
-		}
-	}
-}
-*/

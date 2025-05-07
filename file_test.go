@@ -2,7 +2,7 @@
 // Copyright 2014 Cloudbase Solutions SRL
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check_test
+package tc_test
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"strings"
 
-	. "gopkg.in/check.v2"
+	. "github.com/juju/tc"
 )
 
 type FileSuite struct{}
@@ -33,7 +33,7 @@ func (s *FileSuite) TestIsNonEmptyFileWithEmptyFile(c *C) {
 	c.Assert(err, IsNil)
 	file.Close()
 
-	result, message := IsNonEmptyFile.Check([]interface{}{file.Name()}, nil)
+	result, message := IsNonEmptyFile.Check([]any{file.Name()}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, file.Name()+" is empty")
 }
@@ -41,13 +41,13 @@ func (s *FileSuite) TestIsNonEmptyFileWithEmptyFile(c *C) {
 func (s *FileSuite) TestIsNonEmptyFileWithMissingFile(c *C) {
 	name := filepath.Join(c.MkDir(), "missing")
 
-	result, message := IsNonEmptyFile.Check([]interface{}{name}, nil)
+	result, message := IsNonEmptyFile.Check([]any{name}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, name+" does not exist")
 }
 
 func (s *FileSuite) TestIsNonEmptyFileWithNumber(c *C) {
-	result, message := IsNonEmptyFile.Check([]interface{}{42}, nil)
+	result, message := IsNonEmptyFile.Check([]any{42}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, "obtained value is not a string and has no .String(), int:42")
 }
@@ -60,7 +60,7 @@ func (s *FileSuite) TestIsDirectory(c *C) {
 func (s *FileSuite) TestIsDirectoryMissing(c *C) {
 	absentDir := filepath.Join(c.MkDir(), "foo")
 
-	result, message := IsDirectory.Check([]interface{}{absentDir}, nil)
+	result, message := IsDirectory.Check([]any{absentDir}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, absentDir+" does not exist")
 }
@@ -70,13 +70,13 @@ func (s *FileSuite) TestIsDirectoryWithFile(c *C) {
 	c.Assert(err, IsNil)
 	file.Close()
 
-	result, message := IsDirectory.Check([]interface{}{file.Name()}, nil)
+	result, message := IsDirectory.Check([]any{file.Name()}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, file.Name()+" is not a directory")
 }
 
 func (s *FileSuite) TestIsDirectoryWithNumber(c *C) {
-	result, message := IsDirectory.Check([]interface{}{42}, nil)
+	result, message := IsDirectory.Check([]any{42}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, "obtained value is not a string and has no .String(), int:42")
 }
@@ -88,7 +88,7 @@ func (s *FileSuite) TestDoesNotExist(c *C) {
 
 func (s *FileSuite) TestDoesNotExistWithPath(c *C) {
 	dir := c.MkDir()
-	result, message := DoesNotExist.Check([]interface{}{dir}, nil)
+	result, message := DoesNotExist.Check([]any{dir}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, dir+" exists")
 }
@@ -105,7 +105,7 @@ func (s *FileSuite) TestDoesNotExistWithSymlink(c *C) {
 }
 
 func (s *FileSuite) TestDoesNotExistWithNumber(c *C) {
-	result, message := DoesNotExist.Check([]interface{}{42}, nil)
+	result, message := DoesNotExist.Check([]any{42}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, "obtained value is not a string and has no .String(), int:42")
 }
@@ -117,7 +117,7 @@ func (s *FileSuite) TestSymlinkDoesNotExist(c *C) {
 
 func (s *FileSuite) TestSymlinkDoesNotExistWithPath(c *C) {
 	dir := c.MkDir()
-	result, message := SymlinkDoesNotExist.Check([]interface{}{dir}, nil)
+	result, message := SymlinkDoesNotExist.Check([]any{dir}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, dir+" exists")
 }
@@ -129,13 +129,13 @@ func (s *FileSuite) TestSymlinkDoesNotExistWithSymlink(c *C) {
 	err := os.Symlink(deadPath, symlinkPath)
 	c.Assert(err, IsNil)
 
-	result, message := SymlinkDoesNotExist.Check([]interface{}{symlinkPath}, nil)
+	result, message := SymlinkDoesNotExist.Check([]any{symlinkPath}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, symlinkPath+" exists")
 }
 
 func (s *FileSuite) TestSymlinkDoesNotExistWithNumber(c *C) {
-	result, message := SymlinkDoesNotExist.Check([]interface{}{42}, nil)
+	result, message := SymlinkDoesNotExist.Check([]any{42}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, "obtained value is not a string and has no .String(), int:42")
 }
@@ -155,19 +155,19 @@ func (s *FileSuite) TestIsSymlink(c *C) {
 func (s *FileSuite) TestIsSymlinkWithFile(c *C) {
 	file, err := ioutil.TempFile(c.MkDir(), "")
 	c.Assert(err, IsNil)
-	result, message := IsSymlink.Check([]interface{}{file.Name()}, nil)
+	result, message := IsSymlink.Check([]any{file.Name()}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Contains, " is not a symlink")
 }
 
 func (s *FileSuite) TestIsSymlinkWithDir(c *C) {
-	result, message := IsSymlink.Check([]interface{}{c.MkDir()}, nil)
+	result, message := IsSymlink.Check([]any{c.MkDir()}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Contains, " is not a symlink")
 }
 
 func (s *FileSuite) TestSamePathWithNumber(c *C) {
-	result, message := SamePath.Check([]interface{}{42, 52}, nil)
+	result, message := SamePath.Check([]any{42, 52}, nil)
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, "obtained value is not a string and has no .String(), int:42")
 }
@@ -175,7 +175,7 @@ func (s *FileSuite) TestSamePathWithNumber(c *C) {
 func (s *FileSuite) TestSamePathBasic(c *C) {
 	dir := c.MkDir()
 
-	result, message := SamePath.Check([]interface{}{dir, dir}, nil)
+	result, message := SamePath.Check([]any{dir, dir}, nil)
 
 	c.Assert(result, IsTrue)
 	c.Assert(message, Equals, "")
@@ -196,7 +196,7 @@ func (s *SamePathLinuxSuite) TestNotSamePathLinuxBasic(c *C) {
 	path1 := filepath.Join(dir, "Test")
 	path2 := filepath.Join(dir, "test")
 
-	result, message := SamePath.Check([]interface{}{path1, path2}, nil)
+	result, message := SamePath.Check([]any{path1, path2}, nil)
 
 	c.Assert(result, IsFalse)
 	c.Assert(message, Equals, "stat "+path1+": no such file or directory")
@@ -208,7 +208,7 @@ func (s *SamePathLinuxSuite) TestSamePathLinuxSymlinks(c *C) {
 	symlinkPath := filepath.Join(filepath.Dir(file.Name()), "a-symlink")
 	err = os.Symlink(file.Name(), symlinkPath)
 
-	result, message := SamePath.Check([]interface{}{file.Name(), symlinkPath}, nil)
+	result, message := SamePath.Check([]any{file.Name(), symlinkPath}, nil)
 
 	c.Assert(result, IsTrue)
 	c.Assert(message, Equals, "")
@@ -229,7 +229,7 @@ func (s *SamePathWindowsSuite) TestNotSamePathBasic(c *C) {
 	path1 := filepath.Join(dir, "notTest")
 	path2 := filepath.Join(dir, "test")
 
-	result, message := SamePath.Check([]interface{}{path1, path2}, nil)
+	result, message := SamePath.Check([]any{path1, path2}, nil)
 
 	c.Assert(result, IsFalse)
 	path1 = strings.ToUpper(path1)
@@ -241,14 +241,14 @@ func (s *SamePathWindowsSuite) TestSamePathWindowsCaseInsensitive(c *C) {
 	path1 := filepath.Join(dir, "Test")
 	path2 := filepath.Join(dir, "test")
 
-	result, message := SamePath.Check([]interface{}{path1, path2}, nil)
+	result, message := SamePath.Check([]any{path1, path2}, nil)
 
 	c.Assert(result, IsTrue)
 	c.Assert(message, Equals, "")
 }
 
 func (s *SamePathWindowsSuite) TestSamePathWindowsFixSlashes(c *C) {
-	result, message := SamePath.Check([]interface{}{"C:/Users", "C:\\Users"}, nil)
+	result, message := SamePath.Check([]any{"C:/Users", "C:\\Users"}, nil)
 
 	c.Assert(result, IsTrue)
 	c.Assert(message, Equals, "")
@@ -259,7 +259,7 @@ func (s *SamePathWindowsSuite) TestSamePathShortenedPaths(c *C) {
 	dir1, err := ioutil.TempDir(dir, "Programming")
 	defer os.Remove(dir1)
 	c.Assert(err, IsNil)
-	result, message := SamePath.Check([]interface{}{dir + "\\PROGRA~1", dir1}, nil)
+	result, message := SamePath.Check([]any{dir + "\\PROGRA~1", dir1}, nil)
 
 	c.Assert(result, IsTrue)
 	c.Assert(message, Equals, "")
@@ -274,12 +274,12 @@ func (s *SamePathWindowsSuite) TestSamePathShortenedPathsConsistent(c *C) {
 	defer os.Remove(dir2)
 	c.Assert(err, IsNil)
 
-	result, message := SamePath.Check([]interface{}{dir + "\\PROGRA~1", dir2}, nil)
+	result, message := SamePath.Check([]any{dir + "\\PROGRA~1", dir2}, nil)
 
 	c.Assert(result, Not(IsTrue))
 	c.Assert(message, Equals, "Not the same file")
 
-	result, message = SamePath.Check([]interface{}{"C:/PROGRA~2", "C:/Program Files (x86)"}, nil)
+	result, message = SamePath.Check([]any{"C:/PROGRA~2", "C:/Program Files (x86)"}, nil)
 
 	c.Assert(result, IsTrue)
 	c.Assert(message, Equals, "")

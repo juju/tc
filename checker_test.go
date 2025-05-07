@@ -1,13 +1,13 @@
 // Copyright 2013 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check_test
+package tc_test
 
 import (
 	"fmt"
 	"time"
 
-	. "gopkg.in/check.v2"
+	. "github.com/juju/tc"
 )
 
 type CheckerSuite struct{}
@@ -36,16 +36,16 @@ func (s *CheckerSuite) TestTimeBetween(c *C) {
 	earlier := now.Add(-1 * time.Second)
 	later := now.Add(time.Second)
 
-	checkOK := func(value interface{}, start, end time.Time) {
+	checkOK := func(value any, start, end time.Time) {
 		checker := TimeBetween(start, end)
-		value, msg := checker.Check([]interface{}{value}, nil)
+		value, msg := checker.Check([]any{value}, nil)
 		c.Check(value, IsTrue)
 		c.Check(msg, Equals, "")
 	}
 
-	checkFails := func(value interface{}, start, end time.Time, match string) {
+	checkFails := func(value any, start, end time.Time, match string) {
 		checker := TimeBetween(start, end)
-		value, msg := checker.Check([]interface{}{value}, nil)
+		value, msg := checker.Check([]any{value}, nil)
 		c.Check(value, IsFalse)
 		c.Check(msg, Matches, match)
 	}
@@ -175,7 +175,7 @@ func (s *CheckerSuite) TestSameContents(c *C) {
 	// Oddly, there doesn't seem to actually be a way to check for an error from a Checker.
 
 	// different type
-	res, err := SameContents.Check([]interface{}{
+	res, err := SameContents.Check([]any{
 		[]string{"1", "2"},
 		[]int{1, 2},
 	}, []string{})
@@ -183,7 +183,7 @@ func (s *CheckerSuite) TestSameContents(c *C) {
 	c.Check(err, Not(Equals), "")
 
 	// obtained not a slice
-	res, err = SameContents.Check([]interface{}{
+	res, err = SameContents.Check([]any{
 		"test",
 		[]int{1},
 	}, []string{})
@@ -191,7 +191,7 @@ func (s *CheckerSuite) TestSameContents(c *C) {
 	c.Check(err, Not(Equals), "")
 
 	// expected not a slice
-	res, err = SameContents.Check([]interface{}{
+	res, err = SameContents.Check([]any{
 		[]int{1},
 		"test",
 	}, []string{})
@@ -223,14 +223,14 @@ func (e value_error) Error() string {
 }
 
 func (s *CheckerSuite) TestErrorIsNil(c *C) {
-	checkOK := func(value interface{}) {
-		value, msg := ErrorIsNil.Check([]interface{}{value}, nil)
+	checkOK := func(value any) {
+		value, msg := ErrorIsNil.Check([]any{value}, nil)
 		c.Check(value, IsTrue)
 		c.Check(msg, Equals, "")
 	}
 
-	checkFails := func(value interface{}, match string) {
-		value, msg := ErrorIsNil.Check([]interface{}{value}, nil)
+	checkFails := func(value any, match string) {
+		value, msg := ErrorIsNil.Check([]any{value}, nil)
 		c.Check(value, IsFalse)
 		c.Check(msg, Matches, match)
 	}

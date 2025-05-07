@@ -1,7 +1,10 @@
-package check_test
+// Copyright 2020 Canonical Ltd.
+// Licensed under the LGPLv3, see LICENCE file for details.
+
+package tc_test
 
 import (
-	. "gopkg.in/check.v2"
+	. "github.com/juju/tc"
 )
 
 type MultiCheckerSuite struct{}
@@ -11,7 +14,7 @@ var _ = Suite(&MultiCheckerSuite{})
 func (s *MultiCheckerSuite) TestDeepEquals(c *C) {
 	for i, test := range deepEqualTests {
 		c.Logf("test %d. %v == %v is %v", i, test.a, test.b, test.eq)
-		result, msg := NewMultiChecker().Check([]interface{}{test.a, test.b}, nil)
+		result, msg := NewMultiChecker().Check([]any{test.a, test.b}, nil)
 		c.Check(result, Equals, test.eq)
 		if test.eq {
 			c.Check(msg, Equals, "")

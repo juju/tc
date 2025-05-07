@@ -1,7 +1,7 @@
 // Copyright 2011 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ var IsTrue Checker = &isTrueChecker{
 // boolean type and is false.
 var IsFalse Checker = Not(IsTrue)
 
-func (checker *isTrueChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *isTrueChecker) Check(params []any, names []string) (result bool, error string) {
 	value := reflect.ValueOf(params[0])
 	if !value.IsValid() {
 		return false, fmt.Sprintf("expected type bool, received %s", value)
@@ -50,7 +50,7 @@ var Satisfies Checker = &satisfiesChecker{
 	},
 }
 
-func (checker *satisfiesChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *satisfiesChecker) Check(params []any, names []string) (result bool, error string) {
 	f := reflect.ValueOf(params[1])
 	ft := f.Type()
 	if ft.Kind() != reflect.Func ||
@@ -106,7 +106,7 @@ var DeepEquals Checker = &deepEqualsChecker{
 	&CheckerInfo{Name: "DeepEquals", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *deepEqualsChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *deepEqualsChecker) Check(params []any, names []string) (result bool, error string) {
 	if ok, err := DeepEqual(params[0], params[1]); !ok {
 		return false, err.Error()
 	}
@@ -122,6 +122,6 @@ var Ignore Checker = &ignoreChecker{
 	&CheckerInfo{Name: "Ignore", Params: []string{"obtained"}},
 }
 
-func (checker *ignoreChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *ignoreChecker) Check(params []any, names []string) (result bool, error string) {
 	return true, ""
 }

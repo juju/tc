@@ -5,7 +5,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE-golang file.
 
-package check
+package tc
 
 import (
 	"fmt"
@@ -41,7 +41,7 @@ func (err *mismatchError) Error() string {
 	return fmt.Sprintf("mismatch at %s: %s; obtained %#v; expected %#v", path, err.how, printable(err.v1), printable(err.v2))
 }
 
-func printable(v reflect.Value) interface{} {
+func printable(v reflect.Value) any {
 	vi := interfaceOf(v)
 	switch vi := vi.(type) {
 	case time.Time:
@@ -55,7 +55,7 @@ func printable(v reflect.Value) interface{} {
 // comparisons that have already been seen, which allows short circuiting on
 // recursive types.
 func deepValueEqual(path string, v1, v2 reflect.Value, visited map[visit]bool, depth int, customCheckFunc CustomCheckFunc) (ok bool, err error) {
-	errorf := func(f string, a ...interface{}) error {
+	errorf := func(f string, a ...any) error {
 		return &mismatchError{
 			v1:   v1,
 			v2:   v2,
@@ -251,8 +251,8 @@ func deepValueEqual(path string, v1, v2 reflect.Value, visited map[visit]bool, d
 //
 // If the two values compare unequal, the resulting error holds the
 // first difference encountered.
-func DeepEqual(a1, a2 interface{}) (bool, error) {
-	errorf := func(f string, a ...interface{}) error {
+func DeepEqual(a1, a2 any) (bool, error) {
+	errorf := func(f string, a ...any) error {
 		return &mismatchError{
 			v1:   reflect.ValueOf(a1),
 			v2:   reflect.ValueOf(a2),
@@ -291,8 +291,8 @@ func DeepEqual(a1, a2 interface{}) (bool, error) {
 // If both values are interface-able and customCheckFunc is non nil,
 // customCheckFunc will be invoked. If it returns useDefault as true, the
 // DeepEqual continues, otherwise the result of the customCheckFunc is used.
-func DeepEqualWithCustomCheck(a1 interface{}, a2 interface{}, customCheckFunc CustomCheckFunc) (bool, error) {
-	errorf := func(f string, a ...interface{}) error {
+func DeepEqualWithCustomCheck(a1 any, a2 any, customCheckFunc CustomCheckFunc) (bool, error) {
+	errorf := func(f string, a ...any) error {
 		return &mismatchError{
 			v1:   reflect.ValueOf(a1),
 			v2:   reflect.ValueOf(a2),
@@ -316,14 +316,14 @@ func DeepEqualWithCustomCheck(a1 interface{}, a2 interface{}, customCheckFunc Cu
 
 // CustomCheckFunc should return true for useDefault if DeepEqualWithCustomCheck should behave like DeepEqual.
 // Otherwise the result of the CustomCheckFunc is used.
-type CustomCheckFunc func(path string, a1 interface{}, a2 interface{}) (useDefault bool, equal bool, err error)
+type CustomCheckFunc func(path string, a1 any, a2 any) (useDefault bool, equal bool, err error)
 
 // interfaceOf returns v.Interface() even if v.CanInterface() == false.
 // This enables us to call fmt.Printf on a value even if it's derived
 // from inside an unexported field.
 // See https://code.google.com/p/go/issues/detail?id=8965
 // for a possible future alternative to this hack.
-func interfaceOf(v reflect.Value) interface{} {
+func interfaceOf(v reflect.Value) any {
 	if !v.IsValid() {
 		return nil
 	}

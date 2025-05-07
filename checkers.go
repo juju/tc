@@ -1,4 +1,30 @@
-package check
+// Gocheck - A rich testing framework for Go
+//
+// Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+package tc
 
 import (
 	"fmt"
@@ -14,7 +40,7 @@ import (
 
 type comment struct {
 	format string
-	args   []interface{}
+	args   []any
 }
 
 // Commentf returns an infomational value to use with Assert or Check calls.
@@ -30,7 +56,7 @@ type comment struct {
 // it will also get printed with any errors:
 //
 //	c.Assert(l, Equals, 8192) // Ensure buffer size is correct (bug #123)
-func Commentf(format string, args ...interface{}) CommentInterface {
+func Commentf(format string, args ...any) CommentInterface {
 	return &comment{format, args}
 }
 
@@ -51,7 +77,7 @@ func (c *comment) CheckCommentString() string {
 // the Assert and Check verification methods.
 type Checker interface {
 	Info() *CheckerInfo
-	Check(params []interface{}, names []string) (result bool, error string)
+	Check(params []any, names []string) (result bool, error string)
 }
 
 // See the Checker interface.
@@ -88,7 +114,7 @@ func (checker *notChecker) Info() *CheckerInfo {
 	return &info
 }
 
-func (checker *notChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *notChecker) Check(params []any, names []string) (result bool, error string) {
 	result, error = checker.sub.Check(params, names)
 	result = !result
 	if result {
@@ -114,11 +140,11 @@ var IsNil Checker = &isNilChecker{
 	&CheckerInfo{Name: "IsNil", Params: []string{"value"}},
 }
 
-func (checker *isNilChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *isNilChecker) Check(params []any, names []string) (result bool, error string) {
 	return isNil(params[0]), ""
 }
 
-func isNil(obtained interface{}) (result bool) {
+func isNil(obtained any) (result bool) {
 	if obtained == nil {
 		result = true
 	} else {
@@ -149,14 +175,14 @@ var NotNil Checker = &notNilChecker{
 	&CheckerInfo{Name: "NotNil", Params: []string{"value"}},
 }
 
-func (checker *notNilChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *notNilChecker) Check(params []any, names []string) (result bool, error string) {
 	return !isNil(params[0]), ""
 }
 
 // -----------------------------------------------------------------------
 // Equals checker.
 
-func diffworthy(a interface{}) bool {
+func diffworthy(a any) bool {
 	if a == nil {
 		return false
 	}
@@ -171,7 +197,7 @@ func diffworthy(a interface{}) bool {
 
 // formatUnequal will dump the actual and expected values into a textual
 // representation and return an error message containing a diff.
-func formatUnequal(obtained interface{}, expected interface{}) string {
+func formatUnequal(obtained any, expected any) string {
 	// We do not do diffs for basic types because go-check already
 	// shows them very cleanly.
 	if !diffworthy(obtained) || !diffworthy(expected) {
@@ -224,7 +250,7 @@ var Equals Checker = &equalsChecker{
 	&CheckerInfo{Name: "Equals", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *equalsChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *equalsChecker) Check(params []any, names []string) (result bool, error string) {
 	defer func() {
 		if v := recover(); v != nil {
 			result = false
@@ -259,7 +285,7 @@ var HasLen Checker = &hasLenChecker{
 	&CheckerInfo{Name: "HasLen", Params: []string{"obtained", "n"}},
 }
 
-func (checker *hasLenChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *hasLenChecker) Check(params []any, names []string) (result bool, error string) {
 	n, ok := params[1].(int)
 	if !ok {
 		return false, "n must be an int"
@@ -290,7 +316,7 @@ var ErrorMatches Checker = errorMatchesChecker{
 	&CheckerInfo{Name: "ErrorMatches", Params: []string{"value", "regex"}},
 }
 
-func (checker errorMatchesChecker) Check(params []interface{}, names []string) (result bool, errStr string) {
+func (checker errorMatchesChecker) Check(params []any, names []string) (result bool, errStr string) {
 	if params[0] == nil {
 		return false, "Error value is nil"
 	}
@@ -321,11 +347,11 @@ var Matches Checker = &matchesChecker{
 	&CheckerInfo{Name: "Matches", Params: []string{"value", "regex"}},
 }
 
-func (checker *matchesChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *matchesChecker) Check(params []any, names []string) (result bool, error string) {
 	return matches(params[0], params[1])
 }
 
-func matches(value, regex interface{}) (result bool, error string) {
+func matches(value, regex any) (result bool, error string) {
 	reStr, ok := regex.(string)
 	if !ok {
 		return false, "Regex must be a string"
@@ -363,7 +389,7 @@ var Panics Checker = &panicsChecker{
 	&CheckerInfo{Name: "Panics", Params: []string{"function", "expected"}},
 }
 
-func (checker *panicsChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *panicsChecker) Check(params []any, names []string) (result bool, error string) {
 	f := reflect.ValueOf(params[0])
 	if f.Kind() != reflect.Func || f.Type().NumIn() != 0 {
 		return false, "Function must take zero arguments"
@@ -396,7 +422,7 @@ var PanicMatches Checker = &panicMatchesChecker{
 	&CheckerInfo{Name: "PanicMatches", Params: []string{"function", "expected"}},
 }
 
-func (checker *panicMatchesChecker) Check(params []interface{}, names []string) (result bool, errmsg string) {
+func (checker *panicMatchesChecker) Check(params []any, names []string) (result bool, errmsg string) {
 	f := reflect.ValueOf(params[0])
 	if f.Kind() != reflect.Func || f.Type().NumIn() != 0 {
 		return false, "Function must take zero arguments"
@@ -441,7 +467,7 @@ var FitsTypeOf Checker = &fitsTypeChecker{
 	&CheckerInfo{Name: "FitsTypeOf", Params: []string{"obtained", "sample"}},
 }
 
-func (checker *fitsTypeChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *fitsTypeChecker) Check(params []any, names []string) (result bool, error string) {
 	obtained := reflect.ValueOf(params[0])
 	sample := reflect.ValueOf(params[1])
 	if !obtained.IsValid() {
@@ -472,7 +498,7 @@ var Implements Checker = &implementsChecker{
 	&CheckerInfo{Name: "Implements", Params: []string{"obtained", "ifaceptr"}},
 }
 
-func (checker *implementsChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *implementsChecker) Check(params []any, names []string) (result bool, error string) {
 	obtained := reflect.ValueOf(params[0])
 	ifaceptr := reflect.ValueOf(params[1])
 	if !obtained.IsValid() {

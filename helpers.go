@@ -1,12 +1,38 @@
-package check
+// Gocheck - A rich testing framework for Go
+//
+// Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+package tc
 
 import (
 	"bytes"
 	"fmt"
 	"reflect"
 	"runtime"
-	"strings"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -43,7 +69,7 @@ func (c *C) Output(calldepth int, s string) error {
 // If the last value in args implements CommentInterface, it is used to log
 // additional information instead of being passed to the checker (see Commentf
 // for an example).
-func (c *C) Check(obtained interface{}, checker Checker, args ...interface{}) bool {
+func (c *C) Check(obtained any, checker Checker, args ...any) bool {
 	c.Helper()
 	return internalCheck(c, "Check", obtained, checker, args...)
 }
@@ -57,26 +83,26 @@ func (c *C) Check(obtained interface{}, checker Checker, args ...interface{}) bo
 // If the last value in args implements CommentInterface, it is used to log
 // additional information instead of being passed to the checker (see Commentf
 // for an example).
-func (c *C) Assert(obtained interface{}, checker Checker, args ...interface{}) {
+func (c *C) Assert(obtained any, checker Checker, args ...any) {
 	c.Helper()
 	if !internalCheck(c, "Assert", obtained, checker, args...) {
 		c.FailNow()
 	}
 }
 
-func Check(c testing.TB, obtained interface{}, checker Checker, args ...interface{}) bool {
+func Check(c testing.TB, obtained any, checker Checker, args ...any) bool {
 	c.Helper()
 	return internalCheck(c, "Check", obtained, checker, args...)
 }
 
-func Assert(c testing.TB, obtained interface{}, checker Checker, args ...interface{}) {
+func Assert(c testing.TB, obtained any, checker Checker, args ...any) {
 	c.Helper()
 	if !internalCheck(c, "Assert", obtained, checker, args...) {
 		c.FailNow()
 	}
 }
 
-func internalCheck(c testing.TB, funcName string, obtained interface{}, checker Checker, args ...interface{}) bool {
+func internalCheck(c testing.TB, funcName string, obtained any, checker Checker, args ...any) bool {
 	c.Helper()
 	if checker == nil {
 		lines := []string{
@@ -98,7 +124,7 @@ func internalCheck(c testing.TB, funcName string, obtained interface{}, checker 
 		}
 	}
 
-	params := append([]interface{}{obtained}, args...)
+	params := append([]any{obtained}, args...)
 	info := checker.Info()
 
 	if len(params) != len(info.Params) {
@@ -127,10 +153,10 @@ func internalCheck(c testing.TB, funcName string, obtained interface{}, checker 
 			lines = append(lines, formatValue(names[i], params[i]))
 		}
 		if comment != nil {
-			lines = append(lines, "... " + comment.CheckCommentString())
+			lines = append(lines, "... "+comment.CheckCommentString())
 		}
 		if error != "" {
-			lines = append(lines, "... " + error)
+			lines = append(lines, "... "+error)
 		}
 		c.Error(strings.Join(lines, "\n"))
 		return false
@@ -156,7 +182,7 @@ func formatCaller(skip int) string {
 	return indent(code, "    ")
 }
 
-func formatValue(label string, value interface{}) string {
+func formatValue(label string, value any) string {
 	if label == "" {
 		if hasStringOrError(value) {
 			return fmt.Sprintf("... %#v (%q)", value, value)
@@ -181,7 +207,7 @@ func formatValue(label string, value interface{}) string {
 	}
 }
 
-func hasStringOrError(x interface{}) (ok bool) {
+func hasStringOrError(x any) (ok bool) {
 	_, ok = x.(fmt.Stringer)
 	if ok {
 		return

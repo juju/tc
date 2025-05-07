@@ -8,17 +8,17 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE-golang file.
 
-package check_test
+package tc_test
 
 import (
 	"regexp"
 	"testing"
 	"time"
 
-	. "gopkg.in/check.v2"
+	. "github.com/juju/tc"
 )
 
-func deepEqual(a1, a2 interface{}) bool {
+func deepEqual(a1, a2 any) bool {
 	ok, _ := DeepEqual(a1, a2)
 	return ok
 }
@@ -31,7 +31,7 @@ type Basic struct {
 type NotBasic Basic
 
 type DeepEqualTest struct {
-	a, b interface{}
+	a, b any
 	eq   bool
 	msg  string
 }
@@ -79,7 +79,7 @@ var deepEqualTests = []DeepEqualTest{
 	{1, nil, false, `mismatch at top level: nil vs non-nil mismatch; obtained 1; expected <nil>`},
 	{fn1, fn3, false, `mismatch at top level: non-nil functions; obtained \(func\(\)\)\(nil\); expected \(func\(\)\)\(0x[0-9a-f]+\)`},
 	{fn3, fn3, false, `mismatch at top level: non-nil functions; obtained \(func\(\)\)\(0x[0-9a-f]+\); expected \(func\(\)\)\(0x[0-9a-f]+\)`},
-	{[]interface{}{nil}, []interface{}{"a"}, false, `mismatch at \[0\]: nil vs non-nil interface mismatch`},
+	{[]any{nil}, []any{"a"}, false, `mismatch at \[0\]: nil vs non-nil interface mismatch`},
 
 	// Nil vs empty: they're the same (difference from normal DeepEqual)
 	{[]int{}, []int(nil), true, ""},
@@ -91,8 +91,8 @@ var deepEqualTests = []DeepEqualTest{
 	{int32(1), int64(1), false, `mismatch at top level: type mismatch int32 vs int64; obtained 1; expected 1`},
 	{0.5, "hello", false, `mismatch at top level: type mismatch float64 vs string; obtained 0\.5; expected "hello"`},
 	{[]int{1, 2, 3}, [3]int{1, 2, 3}, false, `mismatch at top level: type mismatch \[\]int vs \[3\]int; obtained \[\]int\{1, 2, 3\}; expected \[3\]int\{1, 2, 3\}`},
-	{&[3]interface{}{1, 2, 4}, &[3]interface{}{1, 2, "s"}, false, `mismatch at \(\*\)\[2\]: type mismatch int vs string; obtained 4; expected "s"`},
-	{Basic{1, 0.5}, NotBasic{1, 0.5}, false, `mismatch at top level: type mismatch check_test\.Basic vs check_test\.NotBasic; obtained check_test\.Basic\{x:1, y:0\.5\}; expected check_test\.NotBasic\{x:1, y:0\.5\}`},
+	{&[3]any{1, 2, 4}, &[3]any{1, 2, "s"}, false, `mismatch at \(\*\)\[2\]: type mismatch int vs string; obtained 4; expected "s"`},
+	{Basic{1, 0.5}, NotBasic{1, 0.5}, false, `mismatch at top level: type mismatch tc_test\.Basic vs tc_test\.NotBasic; obtained tc_test\.Basic\{x:1, y:0\.5\}; expected tc_test\.NotBasic\{x:1, y:0\.5\}`},
 	{time.Unix(0, 0).UTC(), time.Unix(0, 0).In(time.FixedZone("FOO", 60*60)).Add(1), false, `mismatch at top level: unequal; obtained "1970-01-01T00:00:00Z"; expected "1970-01-01T00:00:00.000000001Z"`},
 	{time.Unix(0, 0).UTC(), time.Unix(0, 0).Add(1), false, `mismatch at top level: unequal; obtained "1970-01-01T00:00:00Z"; expected "1970-01-01T00:00:00.000000001Z"`},
 

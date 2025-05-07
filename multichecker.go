@@ -1,7 +1,7 @@
 // Copyright 2020 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ type MultiChecker struct {
 
 type checkerWithArgs interface {
 	Checker
-	Args() []interface{}
+	Args() []any
 }
 
 type matchCheck interface {
@@ -33,10 +33,10 @@ type matchCheck interface {
 
 type multiCheck struct {
 	Checker
-	args []interface{}
+	args []any
 }
 
-func (m *multiCheck) Args() []interface{} {
+func (m *multiCheck) Args() []any {
 	return m.args
 }
 
@@ -68,7 +68,7 @@ func NewMultiChecker() *MultiChecker {
 }
 
 // Add an explict checker by path.
-func (checker *MultiChecker) Add(path string, c Checker, args ...interface{}) *MultiChecker {
+func (checker *MultiChecker) Add(path string, c Checker, args ...any) *MultiChecker {
 	checker.checks[path] = &multiCheck{
 		Checker: c,
 		args:    args,
@@ -77,7 +77,7 @@ func (checker *MultiChecker) Add(path string, c Checker, args ...interface{}) *M
 }
 
 // AddRegex exception which matches path with regex.
-func (checker *MultiChecker) AddRegex(pathRegex string, c Checker, args ...interface{}) *MultiChecker {
+func (checker *MultiChecker) AddRegex(pathRegex string, c Checker, args ...any) *MultiChecker {
 	checker.matchChecks = append(checker.matchChecks, &regexCheck{
 		multiCheck: multiCheck{
 			Checker: c,
@@ -90,7 +90,7 @@ func (checker *MultiChecker) AddRegex(pathRegex string, c Checker, args ...inter
 
 // AddExpr exception which matches path with go expression. Use _ for wildcard.
 // The top level or root value must be a _ when using expression.
-func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...interface{}) *MultiChecker {
+func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...any) *MultiChecker {
 	astExpr, err := parser.ParseExpr(expr)
 	if err != nil {
 		panic(err)
@@ -112,8 +112,8 @@ func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...interface{}
 const topLevel = "🔝"
 
 // Check for go check Checker interface.
-func (checker *MultiChecker) Check(params []interface{}, names []string) (result bool, errStr string) {
-	customCheckFunc := func(path string, a1 interface{}, a2 interface{}) (useDefault bool, equal bool, err error) {
+func (checker *MultiChecker) Check(params []any, names []string) (result bool, errStr string) {
+	customCheckFunc := func(path string, a1 any, a2 any) (useDefault bool, equal bool, err error) {
 		var mc checkerWithArgs
 		if c, ok := checker.checks[strings.Replace(path, topLevel, "", 1)]; ok {
 			mc = c
@@ -133,7 +133,7 @@ func (checker *MultiChecker) Check(params []interface{}, names []string) (result
 			return true, false, nil
 		}
 
-		params := append([]interface{}{a1}, mc.Args()...)
+		params := append([]any{a1}, mc.Args()...)
 		info := mc.Info()
 		if len(params) < len(info.Params) {
 			return false, false, fmt.Errorf("Wrong number of parameters for %s: want %d, got %d", info.Name, len(info.Params), len(params)+1)

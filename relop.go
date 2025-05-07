@@ -1,7 +1,7 @@
 // Copyright 2013 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ var GreaterThan Checker = &greaterThanChecker{
 	&CheckerInfo{Name: "GreaterThan", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *greaterThanChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *greaterThanChecker) Check(params []any, names []string) (result bool, error string) {
 	defer func() {
 		if v := recover(); v != nil {
 			result = false
@@ -59,7 +59,7 @@ var LessThan Checker = &lessThanChecker{
 	&CheckerInfo{Name: "LessThan", Params: []string{"obtained", "expected"}},
 }
 
-func (checker *lessThanChecker) Check(params []interface{}, names []string) (result bool, error string) {
+func (checker *lessThanChecker) Check(params []any, names []string) (result bool, error string) {
 	defer func() {
 		if v := recover(); v != nil {
 			result = false

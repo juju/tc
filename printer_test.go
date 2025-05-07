@@ -1,7 +1,33 @@
-package check_test
+// Gocheck - A rich testing framework for Go
+//
+// Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+package tc_test
 
 import (
-    .   "gopkg.in/check.v2"
+	. "github.com/juju/tc"
 )
 
 var _ = Suite(&PrinterS{})
@@ -9,13 +35,13 @@ var _ = Suite(&PrinterS{})
 type PrinterS struct{}
 
 func (s *PrinterS) TestCountSuite(c *C) {
-    suitesRun += 1
+	suitesRun += 1
 }
 
 var printTestFuncLine int
 
 func init() {
-    printTestFuncLine = getMyLine() + 3
+	printTestFuncLine = getMyLine() + 3
 }
 
 func printTestFunc() {
@@ -27,7 +53,7 @@ func printTestFunc() {
     case 6: println(6)   // Comment6
         println(7)
     }
-    switch interface{}(9).(type) {// Comment9
+    switch any(9).(type) {// Comment9
     case int: println(10)
         println(11)
     }
@@ -51,54 +77,53 @@ func printTestFunc() {
 }
 
 var printLineTests = []struct {
-    line   int
-    output string
+	line   int
+	output string
 }{
-    {1, "println(1) // Comment1"},
-    {2, "if 2 == 2 { // Comment2\n    ...\n}"},
-    {3, "println(3) // Comment3"},
-    {5, "switch 5 {\n...\n}"},
-    {6, "case 6:\n    println(6) // Comment6\n    ..."},
-    {7, "println(7)"},
-    {9, "switch interface{}(9).(type) { // Comment9\n...\n}"},
-    {10, "case int:\n    println(10)\n    ..."},
-    {14, "case <-(chan bool)(nil):\n    println(14)\n    ..."},
-    {15, "println(15)"},
-    {16, "default:\n    println(16)\n    ..."},
-    {17, "println(17)"},
-    {19, "println(19,\n    20)"},
-    {20, "println(19,\n    20)"},
-    {21, "_ = func() {\n    println(21)\n    println(22)\n}"},
-    {22, "println(22)"},
-    {24, "println(24, func() {\n    println(25)\n})"},
-    {25, "println(25)"},
-    {26, "println(24, func() {\n    println(25)\n})"},
-    {29, "// Leading comment\n// with multiple lines.\nprintln(29) // Comment29"},
+	{1, "println(1) // Comment1"},
+	{2, "if 2 == 2 { // Comment2\n    ...\n}"},
+	{3, "println(3) // Comment3"},
+	{5, "switch 5 {\n...\n}"},
+	{6, "case 6:\n    println(6) // Comment6\n    ..."},
+	{7, "println(7)"},
+	{9, "switch any(9).(type) { // Comment9\n...\n}"},
+	{10, "case int:\n    println(10)\n    ..."},
+	{14, "case <-(chan bool)(nil):\n    println(14)\n    ..."},
+	{15, "println(15)"},
+	{16, "default:\n    println(16)\n    ..."},
+	{17, "println(17)"},
+	{19, "println(19,\n    20)"},
+	{20, "println(19,\n    20)"},
+	{21, "_ = func() {\n    println(21)\n    println(22)\n}"},
+	{22, "println(22)"},
+	{24, "println(24, func() {\n    println(25)\n})"},
+	{25, "println(25)"},
+	{26, "println(24, func() {\n    println(25)\n})"},
+	{29, "// Leading comment\n// with multiple lines.\nprintln(29) // Comment29"},
 }
 
 func (s *PrinterS) TestPrintLine(c *C) {
-    for _, test := range printLineTests {
-        output, err := PrintLine("printer_test.go", printTestFuncLine+test.line)
-        c.Assert(err, IsNil)
-        c.Assert(output, Equals, test.output)
-    }
+	for _, test := range printLineTests {
+		output, err := PrintLine("printer_test.go", printTestFuncLine+test.line)
+		c.Assert(err, IsNil)
+		c.Assert(output, Equals, test.output)
+	}
 }
 
 var indentTests = []struct {
-    in, out string
+	in, out string
 }{
-    {"", ""},
-    {"\n", "\n"},
-    {"a", ">>>a"},
-    {"a\n", ">>>a\n"},
-    {"a\nb", ">>>a\n>>>b"},
-    {" ", ">>> "},
+	{"", ""},
+	{"\n", "\n"},
+	{"a", ">>>a"},
+	{"a\n", ">>>a\n"},
+	{"a\nb", ">>>a\n>>>b"},
+	{" ", ">>> "},
 }
 
 func (s *PrinterS) TestIndent(c *C) {
-    for _, test := range indentTests {
-        out := Indent(test.in, ">>>")
-        c.Assert(out, Equals, test.out)
-    }
-
+	for _, test := range indentTests {
+		out := Indent(test.in, ">>>")
+		c.Assert(out, Equals, test.out)
+	}
 }

@@ -1,7 +1,7 @@
 // Copyright 2023 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
-package check
+package tc
 
 import (
 	"errors"
@@ -26,7 +26,7 @@ var (
 	errType = reflect.TypeOf((*error)(nil)).Elem()
 )
 
-func (checker *errorIsChecker) Check(params []interface{}, names []string) (result bool, err string) {
+func (checker *errorIsChecker) Check(params []any, names []string) (result bool, err string) {
 	if params[1] == nil || params[0] == nil {
 		return params[1] == params[0], ""
 	}
