@@ -241,8 +241,24 @@ func (runner *suiteRunner) run(t *testing.T) {
 	})
 
 	c := C{T: t, startTime: time.Now()}
-	t.Cleanup(func() { runner.tearDownSuite.Call(&c) })
+
+	setup := false
+	teardown := func() {
+		runner.tearDownSuite.Call(&c)
+	}
+	teardownOnSetupFail := func() {
+		if setup {
+			return
+		}
+		teardown()
+	}
+
+	// N.B. Teardown must always happen, even if the setup fails
+	// but must be ordered after setup cleanups.
+	t.Cleanup(teardownOnSetupFail)
 	runner.setUpSuite.Call(&c)
+	setup = true
+	t.Cleanup(teardown)
 
 	for _, test := range runner.tests {
 		t.Run(test.Info.Name, func(t *testing.T) {
@@ -255,7 +271,22 @@ func (runner *suiteRunner) run(t *testing.T) {
 func (runner *suiteRunner) runTest(t *testing.T, method *methodType) {
 	c := C{T: t, startTime: time.Now()}
 
-	t.Cleanup(func() { runner.tearDownTest.Call(&c) })
+	setup := false
+	teardown := func() {
+		runner.tearDownTest.Call(&c)
+	}
+	teardownOnSetupFail := func() {
+		if setup {
+			return
+		}
+		teardown()
+	}
+
+	// N.B. Teardown must always happen, even if the setup fails
+	// but must be ordered after setup cleanups.
+	t.Cleanup(teardownOnSetupFail)
 	runner.setUpTest.Call(&c)
+	setup = true
+	t.Cleanup(teardown)
 	method.Call(&c)
 }
