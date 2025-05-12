@@ -250,6 +250,9 @@ func (runner *suiteRunner) run(t *testing.T) {
 		if setup {
 			return
 		}
+		if c.Skipped() {
+			return
+		}
 		teardown()
 	}
 
@@ -277,6 +280,9 @@ func (runner *suiteRunner) runTest(t *testing.T, method *methodType) {
 	}
 	teardownOnSetupFail := func() {
 		if setup {
+			return
+		}
+		if c.Skipped() {
 			return
 		}
 		teardown()

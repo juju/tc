@@ -177,3 +177,43 @@ type expectedState struct {
 	failed bool
 	log    string
 }
+
+type SkippedSuite struct{}
+
+var _ = tc.Suite(&SkippedSuite{})
+
+func (s *SkippedSuite) SetUpSuite(c *tc.C) {
+	c.Skip("skippy")
+}
+
+func (s *SkippedSuite) TearDownSuite(c *tc.C) {
+	c.FailNow()
+}
+
+func (s *SkippedSuite) SetUpTest(c *tc.C) {
+	c.FailNow()
+}
+
+func (s *SkippedSuite) TearDownTest(c *tc.C) {
+	c.FailNow()
+}
+
+func (s *SkippedSuite) TestShouldFail(c *tc.C) {
+	c.FailNow()
+}
+
+type SkippedTestSuite struct{}
+
+var _ = tc.Suite(&SkippedTestSuite{})
+
+func (s *SkippedTestSuite) SetUpTest(c *tc.C) {
+	c.Skip("skippy")
+}
+
+func (s *SkippedTestSuite) TearDownTest(c *tc.C) {
+	c.FailNow()
+}
+
+func (s *SkippedTestSuite) TestShouldFail(c *tc.C) {
+	c.FailNow()
+}
