@@ -40,6 +40,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -275,8 +276,11 @@ func (runner *suiteRunner) runTest(t *testing.T, method *methodType) {
 	c := C{T: t, startTime: time.Now()}
 
 	setup := false
+	once := sync.Once{}
 	teardown := func() {
-		runner.tearDownTest.Call(&c)
+		once.Do(func() {
+			runner.tearDownTest.Call(&c)
+		})
 	}
 	teardownOnSetupFail := func() {
 		if setup {
@@ -289,10 +293,13 @@ func (runner *suiteRunner) runTest(t *testing.T, method *methodType) {
 	}
 
 	// N.B. Teardown must always happen, even if the setup fails
-	// but must be ordered after setup cleanups.
+	// but must be ordered after setup cleanups. If the test does
+	// not panic, then the teardown happens-before testing.T cleanup
+	// and context cancellation.
 	t.Cleanup(teardownOnSetupFail)
 	runner.setUpTest.Call(&c)
 	setup = true
 	t.Cleanup(teardown)
+	defer teardown()
 	method.Call(&c)
 }
