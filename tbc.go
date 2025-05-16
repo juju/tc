@@ -3,7 +3,11 @@
 
 package tc
 
-import "testing"
+import (
+	"path/filepath"
+	"runtime"
+	"testing"
+)
 
 // TBC wraps a testing.TB and implements LikeC.
 type TBC struct {
@@ -17,7 +21,9 @@ func (tbc *TBC) TestName() string {
 }
 
 func (tbc *TBC) Output(calldepth int, s string) error {
-	tbc.Logf("[LOG] X:XX.XXX %s", s)
+	_, file, line, _ := runtime.Caller(calldepth)
+	file = filepath.Base(file)
+	tbc.Logf("%s:%d: %s", file, line, s)
 	return nil
 }
 

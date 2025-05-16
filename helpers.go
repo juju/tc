@@ -29,6 +29,7 @@ package tc
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -53,7 +54,9 @@ func (c *C) Output(calldepth int, s string) error {
 	sec := d / time.Second
 	min := d / time.Minute
 
-	c.Logf("[LOG] %d:%02d.%03d %s", min, sec%60, msec%1000, s)
+	_, file, line, _ := runtime.Caller(calldepth)
+	file = filepath.Base(file)
+	c.Logf("%s:%d: %d:%02d.%03d %s", file, line, min, sec%60, msec%1000, s)
 	return nil
 }
 
