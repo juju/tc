@@ -33,12 +33,7 @@
 package tc
 
 import (
-	"fmt"
-	"os"
-	"path"
 	"reflect"
-	"regexp"
-	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -47,24 +42,6 @@ import (
 
 // -----------------------------------------------------------------------
 // Internal type which deals with suite method calling.
-
-const (
-	fixtureKd = iota
-	testKd
-)
-
-type funcKind int
-
-const (
-	succeededSt = iota
-	failedSt
-	skippedSt
-	panickedSt
-	fixturePanickedSt
-	missedSt
-)
-
-type funcStatus uint32
 
 // A method value can't reach its own Method structure.
 type methodType struct {
@@ -114,72 +91,16 @@ func (m *methodType) Call(c *C) {
 	}
 }
 
-func (method *methodType) matches(re *regexp.Regexp) bool {
-	return (re.MatchString(method.Info.Name) ||
-		re.MatchString(method.suiteName()) ||
-		re.MatchString(method.String()))
-}
-
 type C struct {
 	*testing.T
 
 	method    *methodType
 	reason    string
-	mustFail  bool
 	startTime time.Time
 }
 
 // -----------------------------------------------------------------------
 // Some simple formatting helpers.
-
-var initWD, initWDErr = os.Getwd()
-
-func init() {
-	if initWDErr == nil {
-		initWD = strings.Replace(initWD, "\\", "/", -1) + "/"
-	}
-}
-
-func nicePath(path string) string {
-	if initWDErr == nil {
-		if strings.HasPrefix(path, initWD) {
-			return path[len(initWD):]
-		}
-	}
-	return path
-}
-
-func niceFuncPath(pc uintptr) string {
-	function := runtime.FuncForPC(pc)
-	if function != nil {
-		filename, line := function.FileLine(pc)
-		return fmt.Sprintf("%s:%d", nicePath(filename), line)
-	}
-	return "<unknown path>"
-}
-
-func niceFuncName(pc uintptr) string {
-	function := runtime.FuncForPC(pc)
-	if function != nil {
-		name := path.Base(function.Name())
-		if i := strings.Index(name, "."); i > 0 {
-			name = name[i+1:]
-		}
-		if strings.HasPrefix(name, "(*") {
-			if i := strings.Index(name, ")"); i > 0 {
-				name = name[2:i] + name[i+1:]
-			}
-		}
-		if i := strings.LastIndex(name, ".*"); i != -1 {
-			name = name[:i] + "." + name[i+2:]
-		}
-		if i := strings.LastIndex(name, "·"); i != -1 {
-			name = name[:i] + "." + name[i+2:]
-		}
-		return name
-	}
-	return "<unknown function>"
-}
 
 func suiteName(suite any) string {
 	suiteType := reflect.TypeOf(suite)
@@ -197,7 +118,6 @@ type suiteRunner struct {
 	setUpSuite, tearDownSuite *methodType
 	setUpTest, tearDownTest   *methodType
 	tests                     []*methodType
-	keepDir                   bool
 }
 
 // Create a new suiteRunner able to run all methods in the given suite.

@@ -88,12 +88,6 @@ func (s *String) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// Trivial wrapper to test errors happening on a different file
-// than the test itself.
-func checkEqualWrapper(c *tc.C, obtained, expected any) (result bool, line int) {
-	return c.Check(obtained, tc.Equals, expected), getMyLine()
-}
-
 // -----------------------------------------------------------------------
 // Helper suite for testing basic fail behavior.
 
@@ -126,7 +120,6 @@ type FixtureHelper struct {
 	skipOnN int
 	sleepOn string
 	sleep   time.Duration
-	bytes   int64
 }
 
 func (s *FixtureHelper) trace(name string, c *tc.C) {
@@ -170,13 +163,6 @@ func (s *FixtureHelper) Test2(c *tc.C) {
 // Helper which checks the state of the test and ensures that it matches
 // the given expectations.  Depends on c.Errorf() working, so shouldn't
 // be used to test this one function.
-
-type expectedState struct {
-	name   string
-	result any
-	failed bool
-	log    string
-}
 
 type SkippedSuite struct{}
 

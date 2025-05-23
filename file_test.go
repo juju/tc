@@ -207,6 +207,7 @@ func (s *SamePathLinuxSuite) TestSamePathLinuxSymlinks(c *C) {
 	c.Assert(err, IsNil)
 	symlinkPath := filepath.Join(filepath.Dir(file.Name()), "a-symlink")
 	err = os.Symlink(file.Name(), symlinkPath)
+	c.Assert(err, IsNil)
 
 	result, message := SamePath.Check([]any{file.Name(), symlinkPath}, nil)
 

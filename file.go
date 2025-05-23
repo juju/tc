@@ -218,5 +218,5 @@ func (checker *samePathChecker) Check(params []any, names []string) (result bool
 	if res {
 		return true, ""
 	}
-	return false, fmt.Sprintf("Not the same file")
+	return false, "Not the same file"
 }
