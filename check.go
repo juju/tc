@@ -126,7 +126,6 @@ type C struct {
 	method    *methodType
 	reason    string
 	mustFail  bool
-	tempDir   *tempDir
 	startTime time.Time
 }
 
@@ -198,7 +197,6 @@ type suiteRunner struct {
 	setUpSuite, tearDownSuite *methodType
 	setUpTest, tearDownTest   *methodType
 	tests                     []*methodType
-	tempDir                   *tempDir
 	keepDir                   bool
 }
 
@@ -209,9 +207,8 @@ func newSuiteRunner(suite any) *suiteRunner {
 	suiteValue := reflect.ValueOf(suite)
 
 	runner := &suiteRunner{
-		suite:   suite,
-		tempDir: &tempDir{},
-		tests:   make([]*methodType, 0, suiteNumMethods),
+		suite: suite,
+		tests: make([]*methodType, 0, suiteNumMethods),
 	}
 
 	for i := 0; i != suiteNumMethods; i++ {
@@ -237,10 +234,6 @@ func newSuiteRunner(suite any) *suiteRunner {
 
 // Run all methods in the given suite.
 func (runner *suiteRunner) run(t *testing.T) {
-	t.Cleanup(func() {
-		runner.tempDir.removeAll()
-	})
-
 	c := C{T: t, startTime: time.Now()}
 
 	setup := false

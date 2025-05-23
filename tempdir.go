@@ -35,9 +35,3 @@ func (c *C) MkDir() string {
 	c.Helper()
 	return c.TempDir()
 }
-
-type tempDir struct{}
-
-func (td *tempDir) removeAll() {
-	// nothing
-}
