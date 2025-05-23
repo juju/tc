@@ -36,7 +36,7 @@ import (
 
 type CheckersS struct{}
 
-var _ = tc.Suite(&CheckersS{})
+var _ = tc.InternalSuite(&CheckersS{})
 
 func testInfo(c *tc.C, checker tc.Checker, name string, paramNames []string) {
 	c.Helper()

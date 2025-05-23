@@ -19,7 +19,7 @@ func (e ConstError) Error() string {
 
 type ErrorSuite struct{}
 
-var _ = Suite(&ErrorSuite{})
+var _ = InternalSuite(&ErrorSuite{})
 
 var errorIsTests = []struct {
 	arg    any

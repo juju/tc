@@ -30,7 +30,7 @@ import (
 	. "github.com/juju/tc"
 )
 
-var _ = Suite(&RunS{})
+var _ = InternalSuite(&RunS{})
 
 type RunS struct{}
 

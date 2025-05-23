@@ -48,7 +48,7 @@ const suitesRunExpected = 4
 var suitesRun int = 0
 
 func Test(t *testing.T) {
-	tc.TestingT(t)
+	tc.InternalTestingT(t)
 	if suitesRun != suitesRunExpected {
 		critical(fmt.Sprintf("Expected %d suites to run rather than %d",
 			suitesRunExpected, suitesRun))
@@ -166,7 +166,7 @@ func (s *FixtureHelper) Test2(c *tc.C) {
 
 type SkippedSuite struct{}
 
-var _ = tc.Suite(&SkippedSuite{})
+var _ = tc.InternalSuite(&SkippedSuite{})
 
 func (s *SkippedSuite) SetUpSuite(c *tc.C) {
 	c.Skip("skippy")
@@ -190,7 +190,7 @@ func (s *SkippedSuite) TestShouldFail(c *tc.C) {
 
 type SkippedTestSuite struct{}
 
-var _ = tc.Suite(&SkippedTestSuite{})
+var _ = tc.InternalSuite(&SkippedTestSuite{})
 
 func (s *SkippedTestSuite) SetUpTest(c *tc.C) {
 	c.Skip("skippy")

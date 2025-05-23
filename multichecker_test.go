@@ -9,7 +9,7 @@ import (
 
 type MultiCheckerSuite struct{}
 
-var _ = Suite(&MultiCheckerSuite{})
+var _ = InternalSuite(&MultiCheckerSuite{})
 
 func (s *MultiCheckerSuite) TestDeepEquals(c *C) {
 	for i, test := range deepEqualTests {

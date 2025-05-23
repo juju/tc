@@ -11,7 +11,7 @@ import (
 
 type TimeSuite struct{}
 
-var _ = Suite(&TimeSuite{})
+var _ = InternalSuite(&TimeSuite{})
 
 func (s *TimeSuite) TestBefore(c *C) {
 	now := time.Now()

@@ -12,7 +12,7 @@ import (
 
 type CheckerSuite struct{}
 
-var _ = Suite(&CheckerSuite{})
+var _ = InternalSuite(&CheckerSuite{})
 
 func (s *CheckerSuite) TestHasPrefix(c *C) {
 	c.Assert("foo bar", HasPrefix, "foo")

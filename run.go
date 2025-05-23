@@ -39,10 +39,11 @@ import (
 
 var allSuites []any
 
-// Suite registers the given value as a test suite to be run. Any methods
+// InternalSuite registers the given value as a test suite to be run. Any methods
 // starting with the Test prefix in the given value will be considered as
 // a test method.
-func Suite(suite any) any {
+// Deprecated: prefer to write a standard test function per suite and call Run.
+func InternalSuite(suite any) any {
 	allSuites = append(allSuites, suite)
 	return suite
 }
@@ -54,10 +55,11 @@ var (
 	newListFlag = flag.Bool("tc.list", false, "List the names of all tests that will be run")
 )
 
-// TestingT runs all test suites registered with the Suite function,
+// InternalTestingT runs all test suites registered with the Suite function,
 // printing results to stdout, and reporting any failures back to
 // the "testing" package.
-func TestingT(t *testing.T) {
+// Deprecated: prefer to write a standard test function per suite and call Run.
+func InternalTestingT(t *testing.T) {
 	t.Helper()
 	if *newListFlag {
 		w := bufio.NewWriter(os.Stdout)

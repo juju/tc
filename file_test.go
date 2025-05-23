@@ -17,7 +17,7 @@ import (
 
 type FileSuite struct{}
 
-var _ = Suite(&FileSuite{})
+var _ = InternalSuite(&FileSuite{})
 
 func (s *FileSuite) TestIsNonEmptyFile(c *C) {
 	file, err := ioutil.TempFile(c.MkDir(), "")
@@ -183,7 +183,7 @@ func (s *FileSuite) TestSamePathBasic(c *C) {
 
 type SamePathLinuxSuite struct{}
 
-var _ = Suite(&SamePathLinuxSuite{})
+var _ = InternalSuite(&SamePathLinuxSuite{})
 
 func (s *SamePathLinuxSuite) SetUpSuite(c *C) {
 	if runtime.GOOS == "windows" {
@@ -217,7 +217,7 @@ func (s *SamePathLinuxSuite) TestSamePathLinuxSymlinks(c *C) {
 
 type SamePathWindowsSuite struct{}
 
-var _ = Suite(&SamePathWindowsSuite{})
+var _ = InternalSuite(&SamePathWindowsSuite{})
 
 func (s *SamePathWindowsSuite) SetUpSuite(c *C) {
 	if runtime.GOOS != "windows" {

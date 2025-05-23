@@ -30,7 +30,7 @@ import (
 	. "github.com/juju/tc"
 )
 
-var _ = Suite(&PrinterS{})
+var _ = InternalSuite(&PrinterS{})
 
 type PrinterS struct{}
 

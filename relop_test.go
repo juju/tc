@@ -9,7 +9,7 @@ import (
 
 type RelopSuite struct{}
 
-var _ = Suite(&RelopSuite{})
+var _ = InternalSuite(&RelopSuite{})
 
 func (s *RelopSuite) TestGreaterThan(c *C) {
 	c.Assert(45, GreaterThan, 42)

@@ -12,7 +12,7 @@ import (
 
 type BoolSuite struct{}
 
-var _ = Suite(&BoolSuite{})
+var _ = InternalSuite(&BoolSuite{})
 
 func (s *BoolSuite) TestIsTrue(c *C) {
 	c.Assert(true, IsTrue)

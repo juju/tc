@@ -9,7 +9,7 @@ import (
 
 type orderedSuite struct{}
 
-var _ = Suite(&orderedSuite{})
+var _ = InternalSuite(&orderedSuite{})
 
 func (s *orderedSuite) TestSame(c *C) {
 	left := []int{
@@ -69,7 +69,7 @@ func (s *orderedSuite) TestSubCheckerGetsExpectedValue(c *C) {
 
 type unorderedSuite struct{}
 
-var _ = Suite(&unorderedSuite{})
+var _ = InternalSuite(&unorderedSuite{})
 
 func (s *unorderedSuite) TestSame(c *C) {
 	left := []int{

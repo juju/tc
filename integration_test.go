@@ -35,7 +35,7 @@ import (
 
 type integrationS struct{}
 
-var _ = Suite(&integrationS{})
+var _ = InternalSuite(&integrationS{})
 
 type integrationTestHelper struct{}
 
