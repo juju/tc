@@ -4,10 +4,11 @@
 package tc
 
 import (
+	"crypto/rand"
 	"fmt"
 	"go/ast"
 	"go/parser"
-	"regexp"
+	"log"
 	"strings"
 	"sync"
 )
@@ -16,7 +17,6 @@ import (
 // But checks can be overriden based on path (either explicit match or regexp)
 type MultiChecker struct {
 	*CheckerInfo
-	checks      map[string]checkerWithArgs
 	matchChecks []matchCheck
 }
 
@@ -40,15 +40,6 @@ func (m *multiCheck) Args() []any {
 	return m.args
 }
 
-type regexCheck struct {
-	multiCheck
-	*regexp.Regexp
-}
-
-func (r *regexCheck) WantTopLevel() bool {
-	return false
-}
-
 type astCheck struct {
 	multiCheck
 	astExpr ast.Expr
@@ -63,29 +54,7 @@ func (a *astCheck) WantTopLevel() bool {
 func NewMultiChecker() *MultiChecker {
 	return &MultiChecker{
 		CheckerInfo: &CheckerInfo{Name: "MultiChecker", Params: []string{"obtained", "expected"}},
-		checks:      make(map[string]checkerWithArgs),
 	}
-}
-
-// Add an explict checker by path.
-func (checker *MultiChecker) Add(path string, c Checker, args ...any) *MultiChecker {
-	checker.checks[path] = &multiCheck{
-		Checker: c,
-		args:    args,
-	}
-	return checker
-}
-
-// AddRegex exception which matches path with regex.
-func (checker *MultiChecker) AddRegex(pathRegex string, c Checker, args ...any) *MultiChecker {
-	checker.matchChecks = append(checker.matchChecks, &regexCheck{
-		multiCheck: multiCheck{
-			Checker: c,
-			args:    args,
-		},
-		Regexp: regexp.MustCompile("^" + pathRegex + "$"),
-	})
-	return checker
 }
 
 // AddExpr exception which matches path with go expression. Use _ for wildcard.
@@ -95,6 +64,12 @@ func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...any) *Multi
 	if err != nil {
 		panic(err)
 	}
+
+	root := findRoot(astExpr, "_")
+	if root == nil {
+		panic("cannot find root ident _")
+	}
+	root.Name = topLevel
 
 	checker.matchChecks = append(checker.matchChecks, &astCheck{
 		multiCheck: multiCheck{
@@ -109,24 +84,17 @@ func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...any) *Multi
 // topLevel is a substitute for the top level or root object.
 // We use an unlikely value to provide backwards compatability with previous deep equals
 // behaviour. It is stripped out before any errors are printed.
-const topLevel = "🔝"
+var topLevel = "_" + rand.Text()
 
 // Check for go check Checker interface.
 func (checker *MultiChecker) Check(params []any, names []string) (result bool, errStr string) {
 	customCheckFunc := func(path string, a1 any, a2 any) (useDefault bool, equal bool, err error) {
 		var mc checkerWithArgs
-		if c, ok := checker.checks[strings.Replace(path, topLevel, "", 1)]; ok {
-			mc = c
-		} else {
-			for _, v := range checker.matchChecks {
-				pathCopy := path
-				if !v.WantTopLevel() {
-					pathCopy = strings.Replace(pathCopy, topLevel, "", 1)
-				}
-				if v.MatchString(pathCopy) {
-					mc = v
-					break
-				}
+		for _, v := range checker.matchChecks {
+			if v.MatchString(path) {
+				log.Println(path)
+				mc = v
+				break
 			}
 		}
 		if mc == nil {
@@ -167,7 +135,7 @@ func (checker *MultiChecker) Check(params []any, names []string) (result bool, e
 	return true, ""
 }
 
-// ExpectedValue if passed to MultiChecker.Add or MultiChecker.AddRegex, will be substituded with the expected value.
+// ExpectedValue if passed to MultiChecker.AddExpr, will be substituded with the expected value.
 var ExpectedValue = &struct{}{}
 
 var (
@@ -176,7 +144,6 @@ var (
 )
 
 func (a *astCheck) MatchString(expr string) bool {
-	expr = strings.Replace(expr, topLevel, "_", 1)
 	astCacheLock.Lock()
 	astExpr, ok := astCache[expr]
 	astCacheLock.Unlock()
@@ -191,7 +158,32 @@ func (a *astCheck) MatchString(expr string) bool {
 		astCacheLock.Unlock()
 	}
 
-	return matchAstExpr(a.astExpr, astExpr)
+	if matchAstExpr(a.astExpr, astExpr) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func findRoot(x ast.Expr, name string) *ast.Ident {
+	switch expr := x.(type) {
+	case *ast.IndexExpr:
+		return findRoot(expr.X, name)
+	case *ast.ParenExpr:
+		return findRoot(expr.X, name)
+	case *ast.StarExpr:
+		return findRoot(expr.X, name)
+	case *ast.SelectorExpr:
+		return findRoot(expr.X, name)
+	case *ast.Ident:
+		if expr.Name == name {
+			return expr
+		}
+	case *ast.BasicLit:
+	default:
+		panic(fmt.Sprintf("unknown type %#v", expr))
+	}
+	return nil
 }
 
 func matchAstExpr(expected, obtained ast.Expr) bool {
@@ -201,10 +193,10 @@ func matchAstExpr(expected, obtained ast.Expr) bool {
 		if !ok {
 			return false
 		}
-		if !matchAstExpr(expr.Index, x.Index) {
+		if !matchAstExpr(expr.X, x.X) {
 			return false
 		}
-		if !matchAstExpr(expr.X, x.X) {
+		if !matchAstExpr(expr.Index, x.Index) {
 			return false
 		}
 	case *ast.ParenExpr:
@@ -249,6 +241,9 @@ func matchAstExpr(expected, obtained ast.Expr) bool {
 	case *ast.BasicLit:
 		x, ok := obtained.(*ast.BasicLit)
 		if !ok {
+			return false
+		}
+		if expr.Kind != x.Kind {
 			return false
 		}
 		if expr.Value != x.Value {

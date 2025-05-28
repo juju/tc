@@ -28,7 +28,7 @@ func (s *MultiCheckerSuite) TestArray(c *C) {
 	a1 := []string{"a", "b", "c"}
 	a2 := []string{"a", "bbb", "c"}
 
-	checker := NewMultiChecker().Add("[1]", Ignore)
+	checker := NewMultiChecker().AddExpr("_[1]", Ignore)
 	c.Check(a1, checker, a2)
 }
 
@@ -36,23 +36,7 @@ func (s *MultiCheckerSuite) TestMap(c *C) {
 	a1 := map[string]string{"a": "a", "b": "b", "c": "c"}
 	a2 := map[string]string{"a": "a", "b": "bbbb", "c": "c"}
 
-	checker := NewMultiChecker().Add(`["b"]`, Ignore)
-	c.Check(a1, checker, a2)
-}
-
-func (s *MultiCheckerSuite) TestRegexArray(c *C) {
-	a1 := []string{"a", "b", "c"}
-	a2 := []string{"a", "bbb", "ccc"}
-
-	checker := NewMultiChecker().AddRegex("\\[[1-2]\\]", Ignore)
-	c.Check(a1, checker, a2)
-}
-
-func (s *MultiCheckerSuite) TestRegexMap(c *C) {
-	a1 := map[string]string{"a": "a", "b": "b", "c": "c"}
-	a2 := map[string]string{"a": "aaaa", "b": "bbbb", "c": "cccc"}
-
-	checker := NewMultiChecker().AddRegex(`\[".*"\]`, Ignore)
+	checker := NewMultiChecker().AddExpr(`_["b"]`, Ignore)
 	c.Check(a1, checker, a2)
 }
 
@@ -60,7 +44,7 @@ func (s *MultiCheckerSuite) TestArrayArraysUnordered(c *C) {
 	a1 := [][]string{{"a", "b", "c"}, {"c", "d", "e"}}
 	a2 := [][]string{{"a", "b", "c"}, {}}
 
-	checker := NewMultiChecker().Add("[1]", SameContents, []string{"e", "c", "d"})
+	checker := NewMultiChecker().AddExpr("_[1]", SameContents, []string{"e", "c", "d"})
 	c.Check(a1, checker, a2)
 }
 
@@ -68,7 +52,7 @@ func (s *MultiCheckerSuite) TestArrayArraysUnorderedWithExpected(c *C) {
 	a1 := [][]string{{"a", "b", "c"}, {"c", "d", "e"}}
 	a2 := [][]string{{"a", "b", "c"}, {"e", "c", "d"}}
 
-	checker := NewMultiChecker().Add("[1]", SameContents, ExpectedValue)
+	checker := NewMultiChecker().AddExpr("_[1]", SameContents, ExpectedValue)
 	c.Check(a1, checker, a2)
 }
 
@@ -86,12 +70,12 @@ func (s *MultiCheckerSuite) TestPOD(c *C) {
 	a2 := pod{2, 3, false, false, "b", "b"}
 
 	checker := NewMultiChecker().
-		Add(".A", Ignore).
-		Add(".a", Ignore).
-		Add(".B", Ignore).
-		Add(".b", Ignore).
-		Add(".C", Ignore).
-		Add(".c", Ignore)
+		AddExpr("_.A", Ignore).
+		AddExpr("_.a", Ignore).
+		AddExpr("_.B", Ignore).
+		AddExpr("_.b", Ignore).
+		AddExpr("_.C", Ignore).
+		AddExpr("_.c", Ignore)
 	c.Check(a1, checker, a2)
 }
 
