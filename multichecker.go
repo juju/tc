@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/parser"
-	"log"
 	"strings"
 	"sync"
 )
@@ -71,6 +70,8 @@ func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...any) *Multi
 	}
 	root.Name = topLevel
 
+	astExpr = simplify(astExpr)
+
 	checker.matchChecks = append(checker.matchChecks, &astCheck{
 		multiCheck: multiCheck{
 			Checker: c,
@@ -92,7 +93,6 @@ func (checker *MultiChecker) Check(params []any, names []string) (result bool, e
 		var mc checkerWithArgs
 		for _, v := range checker.matchChecks {
 			if v.MatchString(path) {
-				log.Println(path)
 				mc = v
 				break
 			}
@@ -153,6 +153,7 @@ func (a *astCheck) MatchString(expr string) bool {
 		if err != nil {
 			panic(err)
 		}
+		astExpr = simplify(astExpr)
 		astCacheLock.Lock()
 		astCache[expr] = astExpr
 		astCacheLock.Unlock()
@@ -162,6 +163,30 @@ func (a *astCheck) MatchString(expr string) bool {
 		return true
 	} else {
 		return false
+	}
+}
+
+func simplify(x ast.Expr) ast.Expr {
+	switch expr := x.(type) {
+	case *ast.IndexExpr:
+		copyExpr := *expr
+		copyExpr.X = simplify(expr.X)
+		copyExpr.Index = simplify(expr.Index)
+		return &copyExpr
+	case *ast.ParenExpr:
+		return simplify(expr.X)
+	case *ast.StarExpr:
+		return simplify(expr.X)
+	case *ast.SelectorExpr:
+		exprCopy := *expr
+		exprCopy.X = simplify(expr.X)
+		return &exprCopy
+	case *ast.Ident:
+		return expr
+	case *ast.BasicLit:
+		return expr
+	default:
+		panic(fmt.Sprintf("unknown type %#v", expr))
 	}
 }
 
