@@ -11,6 +11,7 @@
 package tc_test
 
 import (
+	"math/big"
 	"regexp"
 	"testing"
 	"time"
@@ -60,6 +61,9 @@ var deepEqualTests = []DeepEqualTest{
 	{time.Unix(0, 0), time.Unix(0, 0), true, ""},
 	// Same time from different zones (difference from normal DeepEqual)
 	{time.Unix(0, 0).UTC(), time.Unix(0, 0).In(time.FixedZone("FOO", 60*60)), true, ""},
+	{big.NewInt(123456789), big.NewInt(123456789), true, ""},
+	{big.NewFloat(1.23), big.NewFloat(1.23), true, ""},
+	{big.NewRat(1, 2), big.NewRat(1, 2), true, ""},
 
 	// Inequalities
 	{1, 2, false, `mismatch at top level: unequal; obtained 1; expected 2`},
@@ -80,6 +84,9 @@ var deepEqualTests = []DeepEqualTest{
 	{fn1, fn3, false, `mismatch at top level: non-nil functions; obtained \(func\(\)\)\(nil\); expected \(func\(\)\)\(0x[0-9a-f]+\)`},
 	{fn3, fn3, false, `mismatch at top level: non-nil functions; obtained \(func\(\)\)\(0x[0-9a-f]+\); expected \(func\(\)\)\(0x[0-9a-f]+\)`},
 	{[]any{nil}, []any{"a"}, false, `mismatch at \[0\]: nil vs non-nil interface mismatch`},
+	{big.NewInt(123456789), big.NewInt(987654321), false, "mismatch at top level: unequal big int; obtained 123456789; expected 987654321"},
+	{big.NewFloat(1.23), big.NewFloat(3.21), false, "mismatch at top level: unequal big float; obtained 1.23; expected 3.21"},
+	{big.NewRat(1, 2), big.NewRat(1, 4), false, "mismatch at top level: unequal big rational; obtained &big.Rat{a:big.Int{neg:false, abs:big.nat{0x1}}, b:big.Int{neg:false, abs:big.nat{0x2}}}; expected &big.Rat{a:big.Int{neg:false, abs:big.nat{0x1}}, b:big.Int{neg:false, abs:big.nat{0x4}}}"},
 
 	// Nil vs empty: they're the same (difference from normal DeepEqual)
 	{[]int{}, []int(nil), true, ""},

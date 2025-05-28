@@ -9,6 +9,7 @@ package tc
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"strings"
 	"time"
@@ -110,6 +111,41 @@ func deepValueEqual(path string, v1, v2 reflect.Value, visited map[visit]bool, d
 		useDefault, equal, err := customCheckFunc(path, interfaceOf(v1), interfaceOf(v2))
 		if !useDefault {
 			return equal, err
+		}
+	}
+
+	if v1.CanInterface() && v2.CanInterface() {
+		switch v1.Type() {
+		case reflect.TypeFor[*big.Int]():
+			if bigInt1, ok := v1.Interface().(*big.Int); ok {
+				if bigInt2, ok := v2.Interface().(*big.Int); ok {
+					if bigInt1.Cmp(bigInt2) == 0 {
+						return true, nil
+					} else {
+						return false, errorf("unequal big int")
+					}
+				}
+			}
+		case reflect.TypeFor[*big.Float]():
+			if bigFloat1, ok := v1.Interface().(*big.Float); ok {
+				if bigFloat2, ok := v2.Interface().(*big.Float); ok {
+					if bigFloat1.Cmp(bigFloat2) == 0 {
+						return true, nil
+					} else {
+						return false, errorf("unequal big float")
+					}
+				}
+			}
+		case reflect.TypeFor[*big.Rat]():
+			if bigRat1, ok := v1.Interface().(*big.Rat); ok {
+				if bigRat2, ok := v2.Interface().(*big.Rat); ok {
+					if bigRat1.Cmp(bigRat2) == 0 {
+						return true, nil
+					} else {
+						return false, errorf("unequal big rational")
+					}
+				}
+			}
 		}
 	}
 
