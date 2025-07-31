@@ -68,14 +68,14 @@ func (s *integrationS) TestOutput(c *C) {
 	c.Check(exitCode, Equals, 1)
 
 	c.Check(output.Status("TestIntEqualFails"), Equals, "FAIL")
-	c.Check(output.Logs("TestIntEqualFails"), Equals,
+	c.Check(output.Logs("TestIntEqualFails"), HasSuffix,
 		`    integration_test.go:51: 
             c.Check(42, Equals, 43)
         ... obtained int = 42
         ... expected int = 43`)
 
 	c.Check(output.Status("TestMultiLineStringEqualFails"), Equals, "FAIL")
-	c.Check(output.Logs("TestMultiLineStringEqualFails"), Equals,
+	c.Check(output.Logs("TestMultiLineStringEqualFails"), HasSuffix,
 		`    integration_test.go:43: 
             c.Check("foo\nbar\nbaz\nboom\n", Equals, "foo\nbaar\nbaz\nboom\n")
         ... obtained string = "" +
@@ -92,14 +92,14 @@ func (s *integrationS) TestOutput(c *C) {
         ...     [1]: "bar" != "baar"`)
 
 	c.Check(output.Status("TestStringEqualFails"), Equals, "FAIL")
-	c.Check(output.Logs("TestStringEqualFails"), Equals,
+	c.Check(output.Logs("TestStringEqualFails"), HasSuffix,
 		`    integration_test.go:47: 
             c.Check("foo", Equals, "bar")
         ... obtained string = "foo"
         ... expected string = "bar"`)
 
 	c.Check(output.Status("TestStructEqualFails"), Equals, "FAIL")
-	c.Check(output.Logs("TestStructEqualFails"), Equals,
+	c.Check(output.Logs("TestStructEqualFails"), HasSuffix,
 		`    integration_test.go:59: 
             c.Check(complexStruct{1, 2}, Equals, complexStruct{3, 4})
         ... obtained tc_test.complexStruct = tc_test.complexStruct{r:1, i:2}

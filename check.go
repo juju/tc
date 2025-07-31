@@ -34,6 +34,7 @@ package tc
 
 import (
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -187,6 +188,12 @@ func (runner *suiteRunner) run(t *testing.T) {
 // Same as forkTest(), but wait for the test to finish before returning.
 func (runner *suiteRunner) runTest(t *testing.T, method *methodType) {
 	c := C{T: t, startTime: time.Now()}
+
+	// Log out where this test is defined.
+	frame, _ := runtime.CallersFrames([]uintptr{method.PC()}).Next()
+	if frame.File != "" {
+		t.Logf("%s:%d", frame.File, frame.Line)
+	}
 
 	setup := false
 	once := sync.Once{}
