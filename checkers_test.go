@@ -105,14 +105,6 @@ func (s *CheckersS) TestNotNil(c *tc.C) {
 	testCheck(c, tc.NotNil, true, "", make([]int, 1))
 }
 
-func (s *CheckersS) TestNot(c *tc.C) {
-	testInfo(c, tc.Not(tc.IsNil), "Not(IsNil)", []string{"value"})
-
-	testCheck(c, tc.Not(tc.IsNil), false, "", nil)
-	testCheck(c, tc.Not(tc.IsNil), true, "", "a")
-	testCheck(c, tc.Not(tc.Equals), true, "", 42, 43)
-}
-
 type simpleStruct struct {
 	i int
 }

@@ -91,40 +91,6 @@ func (info *CheckerInfo) Info() *CheckerInfo {
 }
 
 // -----------------------------------------------------------------------
-// Not checker logic inverter.
-
-// The Not checker inverts the logic of the provided checker.  The
-// resulting checker will succeed where the original one failed, and
-// vice-versa.
-//
-// For example:
-//
-//	c.Assert(a, Not(Equals), b)
-func Not(checker Checker) Checker {
-	return &notChecker{checker}
-}
-
-type notChecker struct {
-	sub Checker
-}
-
-func (checker *notChecker) Info() *CheckerInfo {
-	info := *checker.sub.Info()
-	info.Name = "Not(" + info.Name + ")"
-	return &info
-}
-
-func (checker *notChecker) Check(params []any, names []string) (result bool, error string) {
-	result, error = checker.sub.Check(params, names)
-	result = !result
-	if result {
-		// clear error message if the new result is true
-		error = ""
-	}
-	return
-}
-
-// -----------------------------------------------------------------------
 // IsNil checker.
 
 type isNilChecker struct {
