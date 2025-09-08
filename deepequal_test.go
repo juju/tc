@@ -58,6 +58,7 @@ var deepEqualTests = []DeepEqualTest{
 	{error(nil), error(nil), true, ""},
 	{map[int]string{1: "one", 2: "two"}, map[int]string{2: "two", 1: "one"}, true, ""},
 	{fn1, fn2, true, ""},
+	{fn3, fn3, true, ""},
 	{time.Unix(0, 0), time.Unix(0, 0), true, ""},
 	// Same time from different zones (difference from normal DeepEqual)
 	{time.Unix(0, 0).UTC(), time.Unix(0, 0).In(time.FixedZone("FOO", 60*60)), true, ""},
@@ -82,7 +83,6 @@ var deepEqualTests = []DeepEqualTest{
 	{nil, 1, false, `mismatch at top level: nil vs non-nil mismatch; obtained <nil>; expected 1`},
 	{1, nil, false, `mismatch at top level: nil vs non-nil mismatch; obtained 1; expected <nil>`},
 	{fn1, fn3, false, `mismatch at top level: non-nil functions; obtained \(func\(\)\)\(nil\); expected \(func\(\)\)\(0x[0-9a-f]+\)`},
-	{fn3, fn3, false, `mismatch at top level: non-nil functions; obtained \(func\(\)\)\(0x[0-9a-f]+\); expected \(func\(\)\)\(0x[0-9a-f]+\)`},
 	{[]any{nil}, []any{"a"}, false, `mismatch at \[0\]: validity mismatch; obtained <nil>; expected "a"`},
 	{big.NewInt(123456789), big.NewInt(987654321), false, "mismatch at top level: unequal big int; obtained 123456789; expected 987654321"},
 	{big.NewFloat(1.23), big.NewFloat(3.21), false, "mismatch at top level: unequal big float; obtained 1.23; expected 3.21"},

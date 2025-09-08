@@ -207,19 +207,6 @@ func deepValueEqual(
 				v1.Len(), v2.Len())
 		}
 		return true, nil
-	case reflect.Func:
-		if v1.CanAddr() && v2.CanAddr() {
-			addr1 := v1.UnsafeAddr()
-			addr2 := v2.UnsafeAddr()
-			if equal(addr1, addr2) {
-				return true, nil
-			}
-		}
-		if v1.IsNil() && equal(true, v2.IsNil()) {
-			return true, nil
-		}
-		// Can't do better than this:
-		return false, errorf("non-nil functions")
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		if !equal(v1.Int(), v2.Int()) {
 			return false, errorf("unequal")
@@ -255,6 +242,15 @@ func deepValueEqual(
 			return false, errorf("unequal")
 		}
 		return true, nil
+	case reflect.Func:
+		if v1.IsNil() && equal(true, v2.IsNil()) {
+			return true, nil
+		}
+		if equal(v1.Pointer(), v2.Pointer()) {
+			return true, nil
+		}
+		// Can't do better than this:
+		return false, errorf("non-nil functions")
 	default:
 		panic("unexpected type " + v1.Type().String())
 	}
