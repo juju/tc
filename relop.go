@@ -26,6 +26,11 @@ func (checker *greaterThanChecker) Check(params []any, names []string) (result b
 		}
 	}()
 
+	gtZero := false
+	if params[1] == 0 {
+		gtZero = true
+	}
+
 	p0value := reflect.ValueOf(params[0])
 	p1value := reflect.ValueOf(params[1])
 	switch p0value.Kind() {
@@ -34,15 +39,24 @@ func (checker *greaterThanChecker) Check(params []any, names []string) (result b
 		reflect.Int16,
 		reflect.Int32,
 		reflect.Int64:
+		if gtZero {
+			return p0value.Int() > 0, ""
+		}
 		return p0value.Int() > p1value.Int(), ""
 	case reflect.Uint,
 		reflect.Uint8,
 		reflect.Uint16,
 		reflect.Uint32,
 		reflect.Uint64:
+		if gtZero {
+			return p0value.Uint() > 0, ""
+		}
 		return p0value.Uint() > p1value.Uint(), ""
 	case reflect.Float32,
 		reflect.Float64:
+		if gtZero {
+			return p0value.Float() > 0, ""
+		}
 		return p0value.Float() > p1value.Float(), ""
 	default:
 	}
@@ -67,6 +81,11 @@ func (checker *lessThanChecker) Check(params []any, names []string) (result bool
 		}
 	}()
 
+	ltZero := false
+	if params[1] == 0 {
+		ltZero = true
+	}
+
 	p0value := reflect.ValueOf(params[0])
 	p1value := reflect.ValueOf(params[1])
 	switch p0value.Kind() {
@@ -75,15 +94,24 @@ func (checker *lessThanChecker) Check(params []any, names []string) (result bool
 		reflect.Int16,
 		reflect.Int32,
 		reflect.Int64:
+		if ltZero {
+			return p0value.Int() < 0, ""
+		}
 		return p0value.Int() < p1value.Int(), ""
 	case reflect.Uint,
 		reflect.Uint8,
 		reflect.Uint16,
 		reflect.Uint32,
 		reflect.Uint64:
+		if ltZero || p1value.Uint() == 0 {
+			return false, "no possible value less than 0"
+		}
 		return p0value.Uint() < p1value.Uint(), ""
 	case reflect.Float32,
 		reflect.Float64:
+		if ltZero {
+			return p0value.Float() < 0, ""
+		}
 		return p0value.Float() < p1value.Float(), ""
 	default:
 	}

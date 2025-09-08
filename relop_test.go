@@ -32,3 +32,18 @@ func (s *RelopSuite) TestLessThan(c *C) {
 	c.Assert(result, IsFalse)
 	c.Assert(msg, Equals, `obtained value string:"Hello" not supported`)
 }
+
+func (s *RelopSuite) TestGreaterThanZero(c *C) {
+	c.Assert(45, GreaterThan, 0)
+	c.Assert(uint(45), GreaterThan, 0)
+	c.Assert(2.25, GreaterThan, 0)
+}
+
+func (s *RelopSuite) TestLessThanZero(c *C) {
+	c.Assert(-45, LessThan, 0)
+	c.Assert(-2.25, LessThan, 0)
+
+	result, msg := LessThan.Check([]any{uint(123), 0}, nil)
+	c.Assert(result, IsFalse)
+	c.Assert(msg, Equals, `no possible value less than 0`)
+}
