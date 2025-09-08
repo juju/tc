@@ -5,11 +5,11 @@ package tc
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/kr/pretty"
@@ -171,7 +171,7 @@ func (checker *MultiChecker) customCheck(
 		if len(params) < len(info.Params) {
 			return false, false, fmt.Errorf(
 				"Wrong number of parameters for %s: want %d, got %d",
-				info.Name, len(info.Params), len(params)+1,
+				info.Name, len(info.Params), len(params),
 			)
 		}
 		// Copy since it may be mutated by Check.
@@ -192,11 +192,11 @@ func (checker *MultiChecker) customCheck(
 			continue
 		}
 
-		path = strings.Replace(path, topLevel, "", 1)
-		if path == "" {
-			path = "top level"
+		var err error
+		if errStr != "" {
+			err = errors.New(errStr)
 		}
-		return false, false, fmt.Errorf("mismatch at %s: %s", path, errStr)
+		return false, false, err
 	}
 
 	return false, true, nil
@@ -212,7 +212,7 @@ func (checker *MultiChecker) customEquals(a1 any, a2 any) bool {
 	if len(params) < len(info.Params) {
 		panic(fmt.Errorf(
 			"Wrong number of parameters for %s: want %d, got %d",
-			info.Name, len(info.Params), len(params)+1,
+			info.Name, len(info.Params), len(params),
 		))
 	}
 	// Copy since it may be mutated by Check.

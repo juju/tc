@@ -182,7 +182,7 @@ func formatUnequal(obtained any, expected any) string {
 		// the "2" here is a bit arbitrary
 		if len(l1) > 2 && len(l2) > 2 {
 			diff := pretty.Diff(l1, l2)
-			return fmt.Sprintf(`String difference:
+			return fmt.Sprintf(`string difference:
 %s`, formatMultiLine(strings.Join(diff, "\n"), false))
 		}
 		// string too short
@@ -198,7 +198,7 @@ func formatUnequal(obtained any, expected any) string {
 		return ""
 	}
 
-	return fmt.Sprintf(`Difference:
+	return fmt.Sprintf(`difference:
 %s`, formatMultiLine(strings.Join(diff, "\n"), false))
 }
 
@@ -217,14 +217,26 @@ var Equals Checker = &equalsChecker{
 }
 
 func (checker *equalsChecker) Check(params []any, names []string) (result bool, error string) {
-	defer func() {
-		if v := recover(); v != nil {
-			result = false
-			error = fmt.Sprint(v)
-		}
-	}()
+	p0 := reflect.ValueOf(params[0])
+	p1 := reflect.ValueOf(params[1])
+	if !p0.IsValid() && !p1.IsValid() {
+		result = true
+	} else if !p0.IsValid() || !p1.IsValid() {
+		result = false
+	} else if !p0.Type().Comparable() {
+		return false, fmt.Sprintf(
+			"incomparable obtained type %T",
+			params[0],
+		)
+	} else if !p1.Type().Comparable() {
+		return false, fmt.Sprintf(
+			"incomparable expected type %T",
+			params[1],
+		)
+	} else {
+		result = params[0] == params[1]
+	}
 
-	result = params[0] == params[1]
 	if !result {
 		error = formatUnequal(params[0], params[1])
 	}
@@ -442,7 +454,13 @@ func (checker *fitsTypeChecker) Check(params []any, names []string) (result bool
 	if !sample.IsValid() {
 		return false, "Invalid sample value"
 	}
-	return obtained.Type().AssignableTo(sample.Type()), ""
+	if !obtained.Type().AssignableTo(sample.Type()) {
+		return false, fmt.Sprintf(
+			"obtained value %v; expected type %s",
+			params[0], sample.Type().String(),
+		)
+	}
+	return true, ""
 }
 
 // -----------------------------------------------------------------------

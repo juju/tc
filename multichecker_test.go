@@ -237,5 +237,5 @@ func (s *MultiCheckerSuite) TestMultipleMatches(c *C) {
 		pc.Check(a1, mc, a3)
 	}()
 	c.Assert(pc.failed.Load(), IsTrue)
-	c.Assert(pc.errString, Contains, "mismatch at [3]")
+	c.Assert(pc.errString, Equals, "mismatch at [3]: unequal; obtained 4.1; expected 4.2")
 }

@@ -8,6 +8,7 @@
 package tc
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -39,7 +40,10 @@ func (err *mismatchError) Error() string {
 	if path == "" {
 		path = "top level"
 	}
-	return fmt.Sprintf("mismatch at %s: %s; obtained %#v; expected %#v", path, err.how, printable(err.v1), printable(err.v2))
+	return fmt.Sprintf(
+		"mismatch at %s: %s; obtained %#v; expected %#v",
+		path, err.how, printable(err.v1), printable(err.v2),
+	)
 }
 
 func printable(v reflect.Value) any {
@@ -95,8 +99,17 @@ func deepValueEqual(
 	}
 
 	if customCheckFunc != nil {
-		useDefault, equal, err := customCheckFunc(path, interfaceOf(v1), interfaceOf(v2))
+		useDefault, equal, err := customCheckFunc(path,
+			interfaceOf(v1), interfaceOf(v2))
 		if !useDefault {
+			if err != nil {
+				var merr *mismatchError
+				if !errors.As(err, &merr) {
+					err = errorf("unequal: %v", err.Error())
+				}
+			} else if !equal {
+				err = errorf("unequal")
+			}
 			return equal, err
 		}
 	}

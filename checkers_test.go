@@ -125,17 +125,17 @@ func (s *CheckersS) TestEquals(c *tc.C) {
 	testCheck(c, tc.Equals, true, "", nil, nil)
 
 	// Slices
-	testCheck(c, tc.Equals, false, "runtime error: comparing uncomparable type []uint8", []byte{1, 2}, []byte{1, 2})
+	testCheck(c, tc.Equals, false, "incomparable obtained type []uint8", []byte{1, 2}, []byte{1, 2})
 
 	// Struct values
 	testCheck(c, tc.Equals, true, "", simpleStruct{1}, simpleStruct{1})
-	testCheck(c, tc.Equals, false, `Difference:
+	testCheck(c, tc.Equals, false, `difference:
 ...     i: 1 != 2`, simpleStruct{1}, simpleStruct{2})
 
 	// Struct pointers, no difference in values, just pointer
 	testCheck(c, tc.Equals, false, "", &simpleStruct{1}, &simpleStruct{1})
 	// Struct pointers, different pointers and different values
-	testCheck(c, tc.Equals, false, `Difference:
+	testCheck(c, tc.Equals, false, `difference:
 ...     i: 1 != 2`, &simpleStruct{1}, &simpleStruct{2})
 }
 
@@ -265,16 +265,16 @@ func (s *CheckersS) TestFitsTypeOf(c *tc.C) {
 
 	// Basic types
 	testCheck(c, tc.FitsTypeOf, true, "", 1, 0)
-	testCheck(c, tc.FitsTypeOf, false, "", 1, int64(0))
+	testCheck(c, tc.FitsTypeOf, false, "obtained value 1; expected type int64", 1, int64(0))
 
 	// Aliases
-	testCheck(c, tc.FitsTypeOf, false, "", 1, errors.New(""))
-	testCheck(c, tc.FitsTypeOf, false, "", "error", errors.New(""))
+	testCheck(c, tc.FitsTypeOf, false, "obtained value 1; expected type *errors.errorString", 1, errors.New(""))
+	testCheck(c, tc.FitsTypeOf, false, "obtained value error; expected type *errors.errorString", "error", errors.New(""))
 	testCheck(c, tc.FitsTypeOf, true, "", errors.New("error"), errors.New(""))
 
 	// Structures
-	testCheck(c, tc.FitsTypeOf, false, "", 1, simpleStruct{})
-	testCheck(c, tc.FitsTypeOf, false, "", simpleStruct{42}, &simpleStruct{})
+	testCheck(c, tc.FitsTypeOf, false, "obtained value 1; expected type tc_test.simpleStruct", 1, simpleStruct{})
+	testCheck(c, tc.FitsTypeOf, false, "obtained value {42}; expected type *tc_test.simpleStruct", simpleStruct{42}, &simpleStruct{})
 	testCheck(c, tc.FitsTypeOf, true, "", simpleStruct{42}, simpleStruct{})
 	testCheck(c, tc.FitsTypeOf, true, "", &simpleStruct{42}, &simpleStruct{})
 

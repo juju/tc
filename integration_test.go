@@ -88,7 +88,7 @@ func (s *integrationS) TestOutput(c *C) {
         ...     "baar\n" +
         ...     "baz\n" +
         ...     "boom\n"
-        ... String difference:
+        ... string difference:
         ...     [1]: "bar" != "baar"`)
 
 	c.Check(output.Status("TestStringEqualFails"), Equals, "FAIL")
@@ -104,7 +104,7 @@ func (s *integrationS) TestOutput(c *C) {
             c.Check(complexStruct{1, 2}, Equals, complexStruct{3, 4})
         ... obtained tc_test.complexStruct = tc_test.complexStruct{r:1, i:2}
         ... expected tc_test.complexStruct = tc_test.complexStruct{r:3, i:4}
-        ... Difference:
+        ... difference:
         ...     r: 1 != 3
         ...     i: 2 != 4`)
 }
