@@ -8,15 +8,20 @@ import (
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/kr/pretty"
 )
 
 // MultiChecker is a deep checker that by default matches for equality.
 // But checks can be overriden based on path (either explicit match or regexp)
 type MultiChecker struct {
 	*CheckerInfo
-	matchChecks []matchCheck
+	matchChecks       []matchCheck
+	lengthMatchChecks []matchCheck
+	equals            checkerWithArgs
 }
 
 type checkerWithArgs interface {
@@ -48,20 +53,58 @@ func (a *astCheck) WantTopLevel() bool {
 	return true
 }
 
-// NewMultiChecker creates a MultiChecker which is a deep checker that by default matches for equality.
-// But checks can be overriden based on path (either explicit match or regexp)
+// NewMultiChecker creates a MultiChecker which is a deep checker that by
+// default matches for equality. But checks can be overriden based on path
+// (either explicit match or regexp)
 func NewMultiChecker() *MultiChecker {
 	return &MultiChecker{
 		CheckerInfo: &CheckerInfo{Name: "MultiChecker", Params: []string{"obtained", "expected"}},
 	}
 }
 
+// SetDefault changes the default equality checking to another checker.
+// Using [tc.Ignore] or [tc.Equals] (with [tc.ExpectedValue]) is currently the
+// only reasonable checkers.
+func (checker *MultiChecker) SetDefault(c Checker, args ...any) *MultiChecker {
+	if c == nil {
+		checker.equals = nil
+	} else if c == Equals && len(args) == 0 {
+		checker.equals = nil
+	} else if c == Equals && len(args) > 0 && args[0] == ExpectedValue {
+		checker.equals = nil
+	} else {
+		checker.equals = &multiCheck{
+			Checker: c,
+			args:    args,
+		}
+	}
+	return checker
+}
+
 // AddExpr exception which matches path with go expression. Use _ for wildcard.
 // The top level or root value must be a _ when using expression.
-func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...any) *MultiChecker {
+// Use `len(_.x.y.z)` to override length checking for the path.
+func (checker *MultiChecker) AddExpr(
+	expr string, c Checker, args ...any,
+) *MultiChecker {
 	astExpr, err := parser.ParseExpr(expr)
 	if err != nil {
 		panic(err)
+	}
+
+	isLenChecker := false
+	if callExpr, ok := astExpr.(*ast.CallExpr); ok {
+		if lhs, ok := callExpr.Fun.(*ast.Ident); !ok || lhs.Name != "len" {
+			panic(fmt.Errorf(
+				"call expression only supports len: got %s",
+				pretty.Sprint(callExpr.Fun),
+			))
+		}
+		if len(callExpr.Args) != 1 {
+			panic("len call expression expected 1 argument")
+		}
+		astExpr = callExpr.Args[0]
+		isLenChecker = true
 	}
 
 	root := findRoot(astExpr, "_")
@@ -72,13 +115,19 @@ func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...any) *Multi
 
 	astExpr = simplify(astExpr)
 
-	checker.matchChecks = append(checker.matchChecks, &astCheck{
+	astChecker := &astCheck{
 		multiCheck: multiCheck{
 			Checker: c,
 			args:    args,
 		},
 		astExpr: astExpr,
-	})
+	}
+
+	if isLenChecker {
+		checker.lengthMatchChecks = append(checker.lengthMatchChecks, astChecker)
+	} else {
+		checker.matchChecks = append(checker.matchChecks, astChecker)
+	}
 	return checker
 }
 
@@ -88,23 +137,42 @@ func (checker *MultiChecker) AddExpr(expr string, c Checker, args ...any) *Multi
 var topLevel = "_" + rand.Text()
 
 // Check for go check Checker interface.
-func (checker *MultiChecker) Check(params []any, names []string) (result bool, errStr string) {
-	customCheckFunc := func(path string, a1 any, a2 any) (useDefault bool, equal bool, err error) {
-		var mc checkerWithArgs
-		for _, v := range checker.matchChecks {
-			if v.MatchString(path) {
-				mc = v
-				break
-			}
-		}
-		if mc == nil {
-			return true, false, nil
-		}
+func (checker *MultiChecker) Check(
+	params []any, names []string,
+) (result bool, errStr string) {
+	v1 := reflect.ValueOf(params[0])
+	v2 := reflect.ValueOf(params[1])
+	result, err := deepValueEqual(topLevel, v1, v2, make(map[visit]bool), 0,
+		checker.customEquals,
+		checker.customLength,
+		checker.customCheck)
+	if err != nil {
+		return result, err.Error()
+	}
+	return result, ""
+}
 
+func (checker *MultiChecker) customCheck(
+	path string, a1 any, a2 any,
+) (useDefault bool, equal bool, err error) {
+	var checkers []checkerWithArgs
+	for _, v := range checker.matchChecks {
+		if v.MatchString(path) {
+			checkers = append(checkers, v)
+		}
+	}
+	if len(checkers) == 0 {
+		return true, false, nil
+	}
+
+	for _, mc := range checkers {
 		params := append([]any{a1}, mc.Args()...)
 		info := mc.Info()
 		if len(params) < len(info.Params) {
-			return false, false, fmt.Errorf("Wrong number of parameters for %s: want %d, got %d", info.Name, len(info.Params), len(params)+1)
+			return false, false, fmt.Errorf(
+				"Wrong number of parameters for %s: want %d, got %d",
+				info.Name, len(info.Params), len(params)+1,
+			)
 		}
 		// Copy since it may be mutated by Check.
 		names := append([]string{}, info.Params...)
@@ -121,21 +189,95 @@ func (checker *MultiChecker) Check(params []any, names []string) (result bool, e
 
 		result, errStr := mc.Check(params, names)
 		if result {
-			return false, true, nil
+			continue
 		}
+
 		path = strings.Replace(path, topLevel, "", 1)
 		if path == "" {
 			path = "top level"
 		}
 		return false, false, fmt.Errorf("mismatch at %s: %s", path, errStr)
 	}
-	if ok, err := DeepEqualWithCustomCheck(params[0], params[1], customCheckFunc); !ok {
-		return false, err.Error()
-	}
-	return true, ""
+
+	return false, true, nil
 }
 
-// ExpectedValue if passed to MultiChecker.AddExpr, will be substituded with the expected value.
+func (checker *MultiChecker) customEquals(a1 any, a2 any) bool {
+	if checker.equals == nil {
+		return a1 == a2
+	}
+
+	params := append([]any{a1}, checker.equals.Args()...)
+	info := checker.equals.Info()
+	if len(params) < len(info.Params) {
+		panic(fmt.Errorf(
+			"Wrong number of parameters for %s: want %d, got %d",
+			info.Name, len(info.Params), len(params)+1,
+		))
+	}
+	// Copy since it may be mutated by Check.
+	names := append([]string{}, info.Params...)
+
+	// Trim to the expected params len.
+	params = params[:len(info.Params)]
+
+	// Perform substitution
+	for i, v := range params {
+		if v == ExpectedValue {
+			params[i] = a2
+		}
+	}
+
+	result, _ := checker.equals.Check(params, names)
+	return result
+}
+
+func (checker *MultiChecker) customLength(path string, a1 int, a2 int) bool {
+	var checkers []checkerWithArgs
+	for _, v := range checker.lengthMatchChecks {
+		if v.MatchString(path) {
+			checkers = append(checkers, v)
+		}
+	}
+	if len(checkers) == 0 {
+		return a1 == a2
+	}
+
+	for _, mc := range checkers {
+		params := append([]any{a1}, mc.Args()...)
+		info := mc.Info()
+		if len(params) < len(info.Params) {
+			panic(fmt.Errorf(
+				"Wrong number of parameters for %s: want %d, got %d",
+				info.Name, len(info.Params), len(params)+1,
+			))
+		}
+		// Copy since it may be mutated by Check.
+		names := append([]string{}, info.Params...)
+
+		// Trim to the expected params len.
+		params = params[:len(info.Params)]
+
+		// Perform substitution
+		for i, v := range params {
+			if v == ExpectedValue {
+				params[i] = a2
+			}
+		}
+
+		result, _ := mc.Check(params, names)
+		if result {
+			continue
+		}
+
+		return false
+	}
+
+	return true
+}
+
+// ExpectedValue if passed to MultiChecker.AddExpr, will be substituded with the
+// expected value.
 var ExpectedValue = &struct{}{}
 
 var (

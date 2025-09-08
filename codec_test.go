@@ -65,7 +65,7 @@ func (s *CheckerSuite) TestJSONEquals(c *C) {
 				First: 47.11,
 			},
 			result: false,
-			msg:    `mismatch at .*: validity mismatch; .*`,
+			msg:    `mismatch at .*: unequal; obtained 47.11; expected 0`,
 		}, {
 			descr:    "illegal optained content",
 			obtained: `{"NotThere": `,
@@ -133,7 +133,7 @@ func (s *CheckerSuite) TestYAMLEquals(c *C) {
 				First: 47.11,
 			},
 			result: false,
-			msg:    `mismatch at .*: validity mismatch; .*`,
+			msg:    `mismatch at .*: unequal; obtained 47.11; expected 0`,
 		}, {
 			descr:    "illegal obtained content",
 			obtained: `{"NotThere": `,

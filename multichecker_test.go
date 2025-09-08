@@ -148,3 +148,94 @@ func (s *MultiCheckerSuite) TestExprComplex(c *C) {
 		AddExpr(`(*(*_.F)).F[_]`, Ignore)
 	c.Check(a1, checker, a2)
 }
+
+func (s *MultiCheckerSuite) TestExprComplexDefault(c *C) {
+	f1 := &complexF{
+		F: []string{"a", "b"},
+	}
+	a1 := complexA{
+		complexB: complexB{
+			B: "wow",
+			b: "wow",
+		},
+		A: 5,
+		C: []int{0, 1, 2, 3, 4, 5},
+		D: map[string]string{
+			"a":     "b",
+			"VALID": "YES",
+		},
+		E: &complexE{E: "E"},
+		F: &f1,
+	}
+	f2 := &complexF{
+		F: []string{"c", "d"},
+	}
+	a2 := complexA{
+		complexB: complexB{
+			B: "cool",
+			b: "cool",
+		},
+		A: 19,
+		C: []int{5, 4, 3, 2, 1, 0},
+		D: map[string]string{
+			"b":     "a",
+			"VALID": "YES",
+		},
+		E: &complexE{E: "EEEEEEEEE"},
+		F: &f2,
+	}
+	checker := NewMultiChecker().
+		SetDefault(Ignore).
+		AddExpr(`_.D["VALID"]`, Equals, ExpectedValue)
+	c.Check(a1, checker, a2)
+
+	// Check it fails when inverting the passing check.
+	checkerInverted := NewMultiChecker().
+		SetDefault(Ignore).
+		AddExpr(`_.D["VALID"]`, Not(Equals), ExpectedValue)
+	pc := panicC{LikeC: c}
+	func() {
+		defer pc.recover()
+		pc.Check(a1, checkerInverted, a2)
+	}()
+	c.Assert(pc.failed.Load(), IsTrue)
+	c.Assert(pc.errString, Contains, `.D["VALID"]`)
+}
+
+func (s *MultiCheckerSuite) TestExprLen(c *C) {
+	a1 := []int{0, 1, 2, 3}
+	a2 := []int{0, 1, 2, 3, 4}
+
+	mc := NewMultiChecker()
+	pc := panicC{LikeC: c}
+	func() {
+		defer pc.recover()
+		pc.Check(a1, mc, a2)
+	}()
+	c.Assert(pc.failed.Load(), IsTrue)
+	c.Assert(pc.errString, Contains, "slice/array length mismatch")
+
+	mcWithLenIgnore := NewMultiChecker().
+		AddExpr(`len(_)`, Ignore)
+	c.Assert(a1, mcWithLenIgnore, a2)
+}
+
+func (s *MultiCheckerSuite) TestMultipleMatches(c *C) {
+	a1 := []any{1, 2, 3, 4.1}
+	a2 := []any{1, 2, 3, 4.1}
+	a3 := []any{1, 2, 3, 4.2}
+
+	mc := NewMultiChecker().
+		AddExpr(`_[_]`, GreaterThan, 0).
+		AddExpr(`_[_]`, Equals, ExpectedValue).
+		AddExpr(`_[3]`, FitsTypeOf, 0.0)
+	c.Assert(a1, mc, a2)
+
+	pc := panicC{LikeC: c}
+	func() {
+		defer pc.recover()
+		pc.Check(a1, mc, a3)
+	}()
+	c.Assert(pc.failed.Load(), IsTrue)
+	c.Assert(pc.errString, Contains, "mismatch at [3]")
+}
