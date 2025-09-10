@@ -65,20 +65,13 @@ func NewMultiChecker() *MultiChecker {
 // SetDefault changes the default equality checking to another checker.
 // Using [tc.Ignore] or [tc.Equals] (with [tc.ExpectedValue]) is currently the
 // only reasonable checkers.
-func (checker *MultiChecker) SetDefault(c Checker, args ...any) *MultiChecker {
-	if c == nil {
-		checker.equals = nil
-	} else if c == Equals && len(args) == 0 {
-		checker.equals = nil
-	} else if c == Equals && len(args) > 0 && args[0] == ExpectedValue {
-		checker.equals = nil
-	} else {
-		checker.equals = &multiCheck{
-			Checker: c,
-			args:    args,
-		}
+func NewMultiCheckerWithDefault(c Checker, args ...any) *MultiChecker {
+	mc := NewMultiChecker()
+	mc.equals = &multiCheck{
+		Checker: c,
+		args:    args,
 	}
-	return checker
+	return mc
 }
 
 // AddExpr exception which matches path with go expression. Use _ for wildcard.

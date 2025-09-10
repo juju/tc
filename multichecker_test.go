@@ -184,14 +184,12 @@ func (s *MultiCheckerSuite) TestExprComplexDefault(c *C) {
 		E: &complexE{E: "EEEEEEEEE"},
 		F: &f2,
 	}
-	checker := NewMultiChecker().
-		SetDefault(Ignore).
+	checker := NewMultiCheckerWithDefault(Ignore).
 		AddExpr(`_.D["VALID"]`, Equals, ExpectedValue)
 	c.Check(a1, checker, a2)
 
 	// Check it fails when inverting the passing check.
-	checkerInverted := NewMultiChecker().
-		SetDefault(Ignore).
+	checkerInverted := NewMultiCheckerWithDefault(Ignore).
 		AddExpr(`_.D["VALID"]`, Not(Equals), ExpectedValue)
 	pc := panicC{LikeC: c}
 	func() {
