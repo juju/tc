@@ -46,17 +46,32 @@ func (c *C) TestName() string {
 // -----------------------------------------------------------------------
 // Basic logging.
 
+// Logger enables *C to be used as a logger in functions that require only
+// the minimum interface of *log.Logger.
+func (c *C) Logger() Logger {
+	return &logger{c}
+}
+
+type Logger interface {
+	Output(calldepth int, s string) error
+}
+
+type logger struct {
+	*C
+}
+
 // Output enables *C to be used as a logger in functions that require only
 // the minimum interface of *log.Logger.
-func (c *C) Output(calldepth int, s string) error {
-	d := time.Since(c.startTime)
+func (l *logger) Output(calldepth int, s string) error {
+	d := time.Since(l.C.startTime)
 	msec := d / time.Millisecond
 	sec := d / time.Second
 	min := d / time.Minute
 
 	_, file, line, _ := runtime.Caller(calldepth)
 	file = filepath.Base(file)
-	c.Logf("%s:%d: %d:%02d.%03d %s", file, line, min, sec%60, msec%1000, s)
+	fmt.Fprintf(l.T.Output(), "%s:%d: %d:%02d.%03d %s\n",
+		file, line, min, sec%60, msec%1000, s)
 	return nil
 }
 

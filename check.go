@@ -33,6 +33,7 @@
 package tc
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
@@ -192,7 +193,7 @@ func (runner *suiteRunner) runTest(t *testing.T, method *methodType) {
 	// Log out where this test is defined.
 	frame, _ := runtime.CallersFrames([]uintptr{method.PC()}).Next()
 	if frame.File != "" {
-		t.Logf("%s:%d", frame.File, frame.Line)
+		fmt.Fprintf(t.Output(), "%s:%d\n", frame.File, frame.Line)
 	}
 
 	setup := false

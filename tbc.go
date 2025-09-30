@@ -4,6 +4,7 @@
 package tc
 
 import (
+	"fmt"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -20,10 +21,18 @@ func (tbc *TBC) TestName() string {
 	return tbc.Name()
 }
 
-func (tbc *TBC) Output(calldepth int, s string) error {
+func (tbc *TBC) Logger() Logger {
+	return &tbcLogger{tbc}
+}
+
+type tbcLogger struct {
+	*TBC
+}
+
+func (l *tbcLogger) Output(calldepth int, s string) error {
 	_, file, line, _ := runtime.Caller(calldepth)
 	file = filepath.Base(file)
-	tbc.Logf("%s:%d: %s", file, line, s)
+	fmt.Fprintf(l.TB.Output(), "%s:%d: %s\n", file, line, s)
 	return nil
 }
 

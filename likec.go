@@ -10,7 +10,7 @@ import "testing"
 type LikeC interface {
 	testing.TB
 	TestName() string
-	Output(calldepth int, s string) error
+	Logger() Logger
 	Check(obtained any, checker Checker, args ...any) bool
 	Assert(obtained any, checker Checker, args ...any)
 	MkDir() string
