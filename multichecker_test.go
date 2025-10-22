@@ -191,13 +191,13 @@ func (s *MultiCheckerSuite) TestExprComplexDefault(c *C) {
 	// Check it fails when inverting the passing check.
 	checkerInverted := NewMultiCheckerWithDefault(Ignore).
 		AddExpr(`_.D["VALID"]`, Not(Equals), ExpectedValue)
-	pc := panicC{LikeC: c}
+	pc := panicC{c: c}
 	func() {
 		defer pc.recover()
 		pc.Check(a1, checkerInverted, a2)
 	}()
 	c.Assert(pc.failed.Load(), IsTrue)
-	c.Assert(pc.errString, Contains, `.D["VALID"]`)
+	c.Assert(pc.err.String(), Contains, `.D["VALID"]`)
 }
 
 func (s *MultiCheckerSuite) TestExprLen(c *C) {
@@ -205,13 +205,13 @@ func (s *MultiCheckerSuite) TestExprLen(c *C) {
 	a2 := []int{0, 1, 2, 3, 4}
 
 	mc := NewMultiChecker()
-	pc := panicC{LikeC: c}
+	pc := panicC{c: c}
 	func() {
 		defer pc.recover()
 		pc.Check(a1, mc, a2)
 	}()
 	c.Assert(pc.failed.Load(), IsTrue)
-	c.Assert(pc.errString, Contains, "slice/array length mismatch")
+	c.Assert(pc.err.String(), Contains, "slice/array length mismatch")
 
 	mcWithLenIgnore := NewMultiChecker().
 		AddExpr(`len(_)`, Ignore)
@@ -229,11 +229,11 @@ func (s *MultiCheckerSuite) TestMultipleMatches(c *C) {
 		AddExpr(`_[3]`, FitsTypeOf, 0.0)
 	c.Assert(a1, mc, a2)
 
-	pc := panicC{LikeC: c}
+	pc := panicC{c: c}
 	func() {
 		defer pc.recover()
 		pc.Check(a1, mc, a3)
 	}()
 	c.Assert(pc.failed.Load(), IsTrue)
-	c.Assert(pc.errString, Equals, "mismatch at [3]: unequal; obtained 4.1; expected 4.2")
+	c.Assert(pc.err.String(), Equals, "mismatch at [3]: unequal; obtained 4.1; expected 4.2\n")
 }

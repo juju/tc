@@ -1,8 +1,11 @@
 package tc_test
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"sync/atomic"
 
@@ -20,7 +23,7 @@ func (s *MustSuite) TestMust(c *C) {
 }
 
 func (s *MustSuite) TestMustFails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	func() {
 		defer pc.recover()
 		Must(pc, func() (string, error) {
@@ -37,7 +40,7 @@ func (s *MustSuite) TestMust0(c *C) {
 }
 
 func (s *MustSuite) TestMust0Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	func() {
 		defer pc.recover()
 		Must0(pc, func() (string, error) {
@@ -55,7 +58,7 @@ func (s *MustSuite) TestMust1(c *C) {
 }
 
 func (s *MustSuite) TestMust1Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var r1 string
 	func() {
 		defer pc.recover()
@@ -75,7 +78,7 @@ func (s *MustSuite) TestMust2(c *C) {
 }
 
 func (s *MustSuite) TestMust2Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var r1 string
 	func() {
 		defer pc.recover()
@@ -94,7 +97,7 @@ func (s *MustSuite) TestMust0_0(c *C) {
 }
 
 func (s *MustSuite) TestMust0_0Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	func() {
 		defer pc.recover()
 		Must0_0(pc, func() error {
@@ -114,7 +117,7 @@ func (s *MustSuite) TestMust1_0(c *C) {
 }
 
 func (s *MustSuite) TestMust1_0Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var a1 string
 	func() {
 		defer pc.recover()
@@ -139,7 +142,7 @@ func (s *MustSuite) TestMust2_0(c *C) {
 }
 
 func (s *MustSuite) TestMust2_0Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var a1, a2 string
 	func() {
 		defer pc.recover()
@@ -161,7 +164,7 @@ func (s *MustSuite) TestMust0_1(c *C) {
 }
 
 func (s *MustSuite) TestMust0_1Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	func() {
 		defer pc.recover()
 		Must0_1(pc, func() (string, error) {
@@ -179,7 +182,7 @@ func (s *MustSuite) TestMust1_1(c *C) {
 }
 
 func (s *MustSuite) TestMust1_1Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var r1 string
 	func() {
 		defer pc.recover()
@@ -199,7 +202,7 @@ func (s *MustSuite) TestMust2_1(c *C) {
 }
 
 func (s *MustSuite) TestMust2_1Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var r1 string
 	func() {
 		defer pc.recover()
@@ -218,7 +221,7 @@ func (s *MustSuite) TestMust0_2(c *C) {
 }
 
 func (s *MustSuite) TestMust0_2Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	func() {
 		defer pc.recover()
 		Must0_2(pc, func() (string, int, error) {
@@ -237,7 +240,7 @@ func (s *MustSuite) TestMust1_2(c *C) {
 }
 
 func (s *MustSuite) TestMust1_2Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var r1 string
 	var r2 int
 	func() {
@@ -260,7 +263,7 @@ func (s *MustSuite) TestMust2_2(c *C) {
 }
 
 func (s *MustSuite) TestMust2_2Fails(c *C) {
-	pc := &panicC{LikeC: c}
+	pc := &panicC{c: c}
 	var r1 string
 	var r2 int
 	func() {
@@ -275,19 +278,56 @@ func (s *MustSuite) TestMust2_2Fails(c *C) {
 }
 
 type panicC struct {
-	LikeC
-	failed    atomic.Bool
-	errString string
+	c      LikeC
+	failed atomic.Bool
+	err    bytes.Buffer
 }
 
 func (pc *panicC) recover() {
 	//revive:disable
 	if err := recover(); err != nil {
-		if !pc.failed.Swap(true) {
-			pc.errString = fmt.Sprintf("%v", err)
+		pc.failed.Store(true)
+		if err != "" {
+			fmt.Fprintln(&pc.err, err)
 		}
 	}
 	//revive:enable
+}
+
+func (pc *panicC) Failed() bool {
+	return pc.failed.Load()
+}
+
+func (pc *panicC) Fail() {
+	pc.failed.Store(true)
+}
+
+func (pc *panicC) FailNow() {
+	panic("")
+}
+
+func (pc *panicC) Fatal(args ...any) {
+	panic(fmt.Sprint(args...))
+}
+
+func (pc *panicC) Fatalf(format string, args ...any) {
+	panic(fmt.Sprintf(format, args...))
+}
+
+func (pc *panicC) SkipNow() {
+	pc.FailNow()
+}
+
+func (pc *panicC) Skipf(format string, args ...any) {
+	pc.Fatalf(format, args...)
+}
+
+func (pc *panicC) Skipped() bool {
+	return pc.failed.Load()
+}
+
+func (pc *panicC) Skip(args ...any) {
+	pc.Fatal(args...)
 }
 
 func (pc *panicC) Assert(obtained any, checker Checker, args ...any) {
@@ -302,9 +342,73 @@ func (pc *panicC) Check(obtained any, checker Checker, args ...any) bool {
 	params := append([]any{obtained}, args...)
 	ok, errString := checker.Check(params, slices.Clone(checker.Info().Params))
 	if !ok {
-		if !pc.failed.Swap(true) {
-			pc.errString = errString
-		}
+		pc.failed.Store(true)
+		fmt.Fprintln(&pc.err, errString)
 	}
+
 	return ok
+}
+
+func (pc *panicC) Attr(key, value string) {
+	pc.c.Attr(key, value)
+}
+
+func (pc *panicC) Cleanup(f func()) {
+	pc.c.Cleanup(f)
+}
+
+func (pc *panicC) Error(args ...any) {
+	fmt.Fprint(&pc.err, args...)
+}
+
+func (pc *panicC) Errorf(format string, args ...any) {
+	fmt.Fprintf(&pc.err, format, args...)
+}
+
+func (pc *panicC) Helper() {
+	pc.c.Helper()
+}
+
+func (pc *panicC) Log(args ...any) {
+	pc.c.Log(args...)
+}
+
+func (pc *panicC) Logf(format string, args ...any) {
+	pc.c.Logf(format, args...)
+}
+
+func (pc *panicC) Name() string {
+	return pc.c.Name()
+}
+
+func (pc *panicC) Setenv(key, value string) {
+	pc.c.Setenv(key, value)
+}
+
+func (pc *panicC) Chdir(dir string) {
+	pc.c.Chdir(dir)
+}
+
+func (pc *panicC) TempDir() string {
+	return pc.c.TempDir()
+}
+
+func (pc *panicC) Context() context.Context {
+	return pc.c.Context()
+}
+
+func (pc *panicC) Output() io.Writer {
+	return pc.c.Output()
+}
+
+func (pc *panicC) TestName() string {
+	return pc.c.TestName()
+}
+
+func (pc *panicC) Logger() Logger {
+	return pc.c.Logger()
+}
+
+func (pc *panicC) MkDir() string {
+	return pc.c.MkDir()
 }

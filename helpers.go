@@ -34,7 +34,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 )
 
@@ -108,19 +107,19 @@ func (c *C) Assert(obtained any, checker Checker, args ...any) {
 	}
 }
 
-func Check(c testing.TB, obtained any, checker Checker, args ...any) bool {
+func Check(c LikeTB, obtained any, checker Checker, args ...any) bool {
 	c.Helper()
 	return internalCheck(c, "Check", obtained, checker, args...)
 }
 
-func Assert(c testing.TB, obtained any, checker Checker, args ...any) {
+func Assert(c LikeTB, obtained any, checker Checker, args ...any) {
 	c.Helper()
 	if !internalCheck(c, "Assert", obtained, checker, args...) {
 		c.FailNow()
 	}
 }
 
-func internalCheck(c testing.TB, funcName string, obtained any, checker Checker, args ...any) bool {
+func internalCheck(c LikeTB, funcName string, obtained any, checker Checker, args ...any) bool {
 	c.Helper()
 	if checker == nil {
 		lines := []string{
