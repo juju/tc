@@ -15,6 +15,8 @@ type Binding interface {
 	Checker
 	// Matches returns true if x passes the checker.
 	Matches(x any) bool
+	// Got returns the error from checking x.
+	Got(x any) string
 	// String returns the name of the sub-checker and the bound arguments.
 	String() string
 }
@@ -71,6 +73,17 @@ func (b *bind) Matches(x any) bool {
 	final = append(final, b.args...)
 	match, _ := b.checker.Check(final, b.Info().Params)
 	return match
+}
+
+func (b *bind) Got(x any) string {
+	final := make([]any, 0, len(b.args)+1)
+	final = append(final, x)
+	final = append(final, b.args...)
+	match, errString := b.checker.Check(final, b.Info().Params)
+	if !match && errString == "" {
+		errString = fmt.Sprintf("expected %s got %s", b.String(), pretty.Sprint(x))
+	}
+	return errString
 }
 
 func (b *bind) String() string {

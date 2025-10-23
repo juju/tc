@@ -17,6 +17,7 @@ func (s *CheckersS) TestBindChecker(c *tc.C) {
 func (s *CheckersS) TestBindMatcher(c *tc.C) {
 	bound := tc.Bind(tc.Equals, "foo")
 	c.Check(bound.Matches("foo"), tc.IsTrue)
+	c.Check(bound.Got("bar"), tc.Equals, "expected Equals(foo) got bar")
 	c.Check(bound.Matches("bar"), tc.IsFalse)
 	c.Check(bound.Matches(nil), tc.IsFalse)
 	c.Check(bound.String(), tc.Equals, "Equals(foo)")
